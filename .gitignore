@@ -1,0 +1,58 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+frontend/node_modules/
+scraper/venv/
+scraper/.venv/
+venv/
+.venv/
+env/
+
+# Production builds
+dist/
+frontend/dist/
+frontend/dist-ssr/
+
+# Environment variables / Secrets
+.env
+.env.local
+.env.*
+*.local
+frontend/.env.local
+frontend/.env.*.local
+
+# Python cache / build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.toast
+.usr
+.gvm
+.node_repl_history
+.npm
+.yarn-state
+.yarn-cache
+
+# IDEs and Editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
