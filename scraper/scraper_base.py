@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+# pyrefly: ignore [missing-import]
 from supabase import create_client, Client
 
 # Funzione per leggere dal file .env.local
@@ -63,23 +64,44 @@ def scrape_sws_events(html_file_path=None):
             from playwright_stealth import Stealth
             
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=False) # Headless False per vederlo in azione
+                # Proviamo a usare l'eseguibile di Google Chrome reale dell'utente per massima affidabilità (ha cookie/trust migliori)
+                chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+                chrome_path_x86 = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+                executable = None
+                
+                if os.path.exists(chrome_path):
+                    executable = chrome_path
+                elif os.path.exists(chrome_path_x86):
+                    executable = chrome_path_x86
+
+                browser = p.chromium.launch(
+                    headless=False,
+                    executable_path=executable,
+                    ignore_default_args=["--enable-automation"]
+                )
                 context = browser.new_context(
                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-                    locale="it-IT"
+                    locale="it-IT",
+                    viewport={"width": 1280, "height": 720}
                 )
                 page = context.new_page()
                 Stealth().apply_stealth_sync(page)
 
-                page.goto(url, timeout=30000)
-                # Aspetta che la tabella sia visibile
-                page.wait_for_selector("table#race-listing-table", timeout=10000)
-                html_content = page.content()
-                browser.close()
-                
+                try:
+                    page.goto(url, timeout=90000)
+                    page.wait_for_selector("table#race-listing-table", timeout=90000)
+                    html_content = page.content()
+                except Exception as inner_e:
+                    print(f"Eccezione Playwright (inner): {inner_e}")
+                    page.screenshot(path="debug_screenshot.png")
+                    print("Screenshot di debug salvato.")
+                    html_content = page.content() # Salviamo comunque l'HTML
+                finally:
+                    browser.close()
+                    
         except Exception as e:
             import traceback
-            print(f"Errore durante la navigazione Playwright: {type(e).__name__} - {e}")
+            print(f"Errore generale: {e}")
             traceback.print_exc()
             return []
 
