@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { insertEvent } from '../lib/eventsRepository';
 
 function OrganizerDashboard() {
   const [loading, setLoading] = useState(false);
@@ -27,11 +27,7 @@ function OrganizerDashboard() {
     setErrorMsg('');
 
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .insert([formData]);
-
-      if (error) throw error;
+      await insertEvent(formData);
 
       setSuccessMsg('EVENTO INSERITO CON SUCCESSO!');
       setFormData({
@@ -91,7 +87,7 @@ function OrganizerDashboard() {
             
             <div className="brutalist-input-group">
               <label>DATA EVENTO</label>
-              <input required type="text" name="event_date" value={formData.event_date} onChange={handleChange} placeholder="es. 15-08-2026" />
+              <input required type="date" name="event_date" value={formData.event_date} onChange={handleChange} />
             </div>
           </div>
 
