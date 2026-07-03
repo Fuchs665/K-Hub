@@ -7,6 +7,8 @@ import TracksDirectory from './pages/TracksDirectory';
 import RkcAsi from './pages/RkcAsi';
 import OrganizerDashboard from './pages/OrganizerDashboard';
 import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import EventDetails from './pages/EventDetails';
 import './index.css';
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
         <Route path="/rkc-asi" element={<RkcAsi />} />
         <Route path="/organizer" element={<OrganizerDashboard />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/event/:id" element={<EventDetails />} />
       </Routes>
     </Router>
   );

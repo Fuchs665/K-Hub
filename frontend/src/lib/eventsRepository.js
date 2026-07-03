@@ -64,3 +64,39 @@ export async function insertEvent(eventData) {
   clearCached('rkcAsiEvents:');
   return data;
 }
+
+export async function getEventById(eventId) {
+  const cacheKey = `event:${eventId}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('id', eventId)
+    .single();
+
+  if (error) throw error;
+  setCached(cacheKey, data);
+  return data;
+}
+
+export async function getEventLapTimes(eventId) {
+  const cacheKey = `eventLapTimes:${eventId}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  // Laps require joining race_results to filter by event_id
+  const { data, error } = await supabase
+    .from('lap_times')
+    .select(`
+      id, lap_number, time_ms,
+      race_results!inner(id, event_id, pilot_id)
+    `)
+    .eq('race_results.event_id', eventId)
+    .order('lap_number', { ascending: true });
+
+  if (error) throw error;
+  setCached(cacheKey, data || []);
+  return data || [];
+}
