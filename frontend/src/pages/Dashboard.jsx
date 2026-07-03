@@ -110,11 +110,11 @@ function Dashboard() {
                 <div key={r.id || idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end' }}>
                   <span className="font-mono" style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>{r.points}</span>
                   <div 
-                    title={\`Pos: \${r.position} - Punti: \${r.points}\`}
+                    title={`Pos: ${r.position} - Punti: ${r.points}`}
                     style={{ 
                       width: '100%', 
                       background: isPodium ? 'var(--castrol-green)' : 'var(--text-main)', 
-                      height: \`\${heightPct}%\`,
+                      height: `${heightPct}%`,
                       transition: 'height 0.3s ease'
                     }} 
                   />
@@ -159,7 +159,7 @@ function Dashboard() {
                   </span>
                 </div>
 
-                <Link to={\`/event/\${race.events?.id}\`} className="btn-outline-snappy" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Link to={`/event/${race.events?.id}`} className="btn-outline-snappy" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   Classifica <ChevronRight size={16} />
                 </Link>
               </div>
