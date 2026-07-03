@@ -7,6 +7,7 @@
 -- events: sostituisce la policy INSERT WITH CHECK (true)
 -- ============================================================
 DROP POLICY IF EXISTS "Inserimento eventi autorizzato" ON public.events;
+DROP POLICY IF EXISTS "events_insert_authenticated" ON public.events;
 
 CREATE POLICY "events_insert_authenticated" ON public.events
     FOR INSERT TO authenticated
