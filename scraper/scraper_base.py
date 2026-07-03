@@ -3,21 +3,25 @@ from datetime import datetime
 # pyrefly: ignore [missing-import]
 from supabase import create_client, Client
 
-# Funzione per leggere dal file .env.local
+# Funzione per leggere dal file .env.local dello scraper (separato dal frontend:
+# qui serve la service_role key, che deve restare fuori dalla dir frontend/).
 def load_env():
-    env_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', '.env.local')
+    env_path = os.path.join(os.path.dirname(__file__), '.env.local')
     if os.path.exists(env_path):
         with open(env_path, 'r') as f:
             for line in f:
                 if '=' in line:
                     key, value = line.strip().split('=', 1)
-                    os.environ[key] = value
+                    if value:
+                        os.environ[key] = value
 
 load_env()
-SUPABASE_URL = os.getenv("VITE_SUPABASE_URL")
-SUPABASE_KEY = os.getenv("VITE_SUPABASE_ANON_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# La RLS su events richiede owner-check sull'INSERT (auth.uid()): la service_role key
+# bypassa RLS, necessaria perché lo scraper non è un utente autenticato.
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 class KartingEvent:
     def __init__(self, title, track_name, event_date, event_type, engine_type, price, is_beginner_friendly, source_url):
@@ -35,11 +39,15 @@ class KartingEvent:
         return self.__dict__
 
 def insert_events_to_supabase(events_list):
-    """Carica una lista di oggetti KartingEvent nella tabella Supabase."""
+    """Carica una lista di oggetti KartingEvent nella tabella Supabase.
+    Usa upsert su (source_url, event_date) per evitare duplicati ad ogni run."""
     data_to_insert = [e.to_dict() for e in events_list]
     try:
-        response = supabase.table("events").insert(data_to_insert).execute()
-        print(f"Inserimento completato! Caricati {len(response.data)} eventi nel database.")
+        response = supabase.table("events").upsert(
+            data_to_insert,
+            on_conflict="source_url,event_date"
+        ).execute()
+        print(f"Upsert completato! Caricati/aggiornati {len(response.data)} eventi nel database.")
         return response.data
     except Exception as e:
         print(f"Errore durante l'inserimento: {e}")

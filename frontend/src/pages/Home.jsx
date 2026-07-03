@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { Calendar, MapPin, Flag, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 function Home() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);

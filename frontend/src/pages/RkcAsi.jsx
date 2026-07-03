@@ -1,10 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { MapPin, Calendar, ChevronRight, ChevronLeft, Trophy, ExternalLink } from 'lucide-react';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 function RkcAsi() {
   const [events, setEvents] = useState([]);
