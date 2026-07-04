@@ -29,6 +29,10 @@ frontend/dist-ssr/
 frontend/.env.local
 frontend/.env.*.local
 
+# Scraper debug/temp dumps
+scraper/*_temp.json
+scraper/*.html
+
 # Python cache / build artifacts
 __pycache__/
 *.pyc
