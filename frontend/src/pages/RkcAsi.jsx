@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { getRkcAsiEvents } from '../lib/eventsRepository';
 import { MapPin, Calendar, ChevronRight, ChevronLeft, Trophy, ExternalLink } from 'lucide-react';
 
 function RkcAsi() {
@@ -24,28 +24,14 @@ function RkcAsi() {
   ];
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    fetchEvents(activeRegion);
+  }, [activeRegion]);
 
-  async function fetchEvents() {
+  async function fetchEvents(region) {
     try {
       setLoading(true);
-      // Fetches all events, but we will filter out only the ones containing RKC or ASI
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('event_date', { ascending: true });
-      
-      if (error) throw error;
-      
-      // Basic mock filter to only grab "RKC" or "ASI" events
-      const rkcEvents = (data || []).filter(e => 
-        e.title?.toUpperCase().includes('RKC') || 
-        e.title?.toUpperCase().includes('ASI') ||
-        e.description?.toUpperCase().includes('ASI')
-      );
-      
-      setEvents(rkcEvents);
+      const data = await getRkcAsiEvents({ region });
+      setEvents(data);
     } catch (error) {
       console.error('Error fetching RKC events:', error);
     } finally {
@@ -53,10 +39,6 @@ function RkcAsi() {
     }
   }
 
-  // Filter events by the selected region
-  const regionalEvents = events.filter(e => 
-    e.track_name?.toUpperCase().includes(activeRegion.toUpperCase())
-  );
 
   return (
     <div className="container main-content">
@@ -107,12 +89,12 @@ function RkcAsi() {
           </h3>
           
           <div className="events-grid">
-            {regionalEvents.length === 0 ? (
+            {events.length === 0 ? (
               <div style={{ padding: '20px 0', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
                 Nessuna tappa RKC ASI confermata al momento per questa regione.
               </div>
             ) : (
-              regionalEvents.map(event => (
+              events.map(event => (
                 <div key={event.id} className="card-snappy">
                   <div className="card-header" style={{ background: 'var(--castrol-red)', color: 'white', borderColor: 'var(--castrol-red)' }}>
                     <span className="font-mono" style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>

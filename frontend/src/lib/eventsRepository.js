@@ -57,11 +57,30 @@ export async function getRkcAsiEvents({ region = 'ALL' } = {}) {
   return data || [];
 }
 
+export async function getUpcomingEvents(limit = 3) {
+  const cacheKey = `upcomingEvents:${limit}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .gte('event_date', today)
+    .order('event_date', { ascending: true })
+    .limit(limit);
+
+  if (error) throw error;
+  setCached(cacheKey, data || []);
+  return data || [];
+}
+
 export async function insertEvent(eventData) {
   const { data, error } = await supabase.from('events').insert([eventData]).select();
   if (error) throw error;
   clearCached('events:');
   clearCached('rkcAsiEvents:');
+  clearCached('upcomingEvents:');
   return data;
 }
 

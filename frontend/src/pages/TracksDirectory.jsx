@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { getTracks } from '../lib/tracksRepository';
 import { MapPin, Globe, ExternalLink } from 'lucide-react';
 
 function TracksDirectory() {
@@ -13,13 +13,8 @@ function TracksDirectory() {
   async function fetchTracks() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('tracks')
-        .select('*')
-        .order('name', { ascending: true });
-      
-      if (error) throw error;
-      setTracks(data || []);
+      const data = await getTracks();
+      setTracks(data);
     } catch (error) {
       console.error('Error fetching tracks:', error);
     } finally {

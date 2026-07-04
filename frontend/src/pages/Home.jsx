@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { getUpcomingEvents } from '../lib/eventsRepository';
 import { Calendar, MapPin, Flag, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -14,15 +14,8 @@ function Home() {
   async function fetchEvents() {
     try {
       setLoading(true);
-      // Fetch solo i prossimi 3 eventi
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('event_date', { ascending: true })
-        .limit(3);
-      
-      if (error) throw error;
-      setUpcomingEvents(data || []);
+      const data = await getUpcomingEvents(3);
+      setUpcomingEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
