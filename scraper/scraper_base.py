@@ -48,14 +48,20 @@ class KartingEvent:
 
 def insert_events_to_supabase(events_list):
     """Carica una lista di oggetti KartingEvent nella tabella Supabase.
-    Usa upsert su (source_url, event_date) per evitare duplicati ad ogni run."""
+    Usa upsert su (source_url, event_date) per evitare duplicati ad ogni run:
+    gli eventi gia' presenti vengono aggiornati invece di generare errori
+    sul vincolo UNIQUE events_source_url_event_date_key."""
     data_to_insert = [e.to_dict() for e in events_list]
     try:
-        response = supabase.table("events").insert(data_to_insert).execute()
-        print(f"Inserimento completato! Caricati {len(response.data)} eventi nel database.")
+        response = (
+            supabase.table("events")
+            .upsert(data_to_insert, on_conflict="source_url,event_date")
+            .execute()
+        )
+        print(f"Upsert completato! Caricati/aggiornati {len(response.data)} eventi nel database.")
         return response.data
     except Exception as e:
-        print(f"Errore durante l'inserimento: {e}")
+        print(f"Errore durante l'upsert: {e}")
 
 def scrape_sws_events(html_file_path=None):
     import requests
