@@ -81,7 +81,25 @@ export async function insertEvent(eventData) {
   clearCached('events:');
   clearCached('rkcAsiEvents:');
   clearCached('upcomingEvents:');
+  clearCached('eventsLite:');
   return data;
+}
+
+// Lista leggera per select/dropdown (es. inserimento risultati).
+export async function getEventsLite(limit = 200) {
+  const cacheKey = `eventsLite:${limit}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const { data, error } = await supabase
+    .from('events')
+    .select('id, title, event_date, track_name')
+    .order('event_date', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  setCached(cacheKey, data || []);
+  return data || [];
 }
 
 export async function getEventById(eventId) {
