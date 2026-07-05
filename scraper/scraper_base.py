@@ -46,12 +46,65 @@ class KartingEvent:
     def to_dict(self):
         return self.__dict__
 
+ITALIAN_REGIONS = [
+    "Abruzzo", "Basilicata", "Calabria", "Campania", "Emilia-Romagna",
+    "Friuli-Venezia Giulia", "Lazio", "Liguria", "Lombardia", "Marche",
+    "Molise", "Piemonte", "Puglia", "Sardegna", "Sicilia", "Toscana",
+    "Trentino-Alto Adige", "Umbria", "Valle d'Aosta", "Veneto",
+]
+
+def load_track_regions():
+    """Mappa nome pista (lowercase) -> region dalla tabella tracks."""
+    if not supabase:
+        return {}
+    try:
+        response = supabase.table("tracks").select("name, region").execute()
+        return {
+            row["name"].strip().lower(): row["region"]
+            for row in (response.data or [])
+            if row.get("name") and row.get("region")
+        }
+    except Exception as e:
+        print(f"Avviso: lookup tabella tracks fallito ({e}); region non popolata.")
+        return {}
+
+def resolve_region(track_name, track_regions):
+    """Regione dell'evento: match esatto sulla tabella tracks, altrimenti
+    fallback con l'euristica della migration 001 (nome regione dentro il
+    nome pista). None se non determinabile: dato incompleto ammesso."""
+    if not track_name:
+        return None
+    key = track_name.strip().lower()
+    if key in track_regions:
+        return track_regions[key]
+    for region in ITALIAN_REGIONS:
+        if region.lower() in key:
+            return region
+    return None
+
+def resolve_format(title):
+    """Stessa euristica del backfill della migration 001."""
+    if title and ("campionato" in title.lower() or "championship" in title.lower()):
+        return "campionato"
+    return "gara_singola"
+
 def insert_events_to_supabase(events_list):
     """Carica una lista di oggetti KartingEvent nella tabella Supabase.
     Usa upsert su (source_url, event_date) per evitare duplicati ad ogni run:
     gli eventi gia' presenti vengono aggiornati invece di generare errori
-    sul vincolo UNIQUE events_source_url_event_date_key."""
+    sul vincolo UNIQUE events_source_url_event_date_key.
+    Prima dell'upsert arricchisce ogni evento con region (lookup tracks +
+    fallback euristico) e format, cosi' i filtri del Calendario vedono
+    anche gli eventi scrapeati; vale per tutte le fonti (run_all incluso)."""
     data_to_insert = [e.to_dict() for e in events_list]
+
+    track_regions = load_track_regions()
+    for row in data_to_insert:
+        if not row.get("region"):
+            row["region"] = resolve_region(row.get("track_name"), track_regions)
+        if not row.get("format"):
+            row["format"] = resolve_format(row.get("title"))
+
     try:
         response = (
             supabase.table("events")
