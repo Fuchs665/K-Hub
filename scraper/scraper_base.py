@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 # pyrefly: ignore [missing-import]
 from supabase import create_client, Client
@@ -53,6 +54,65 @@ ITALIAN_REGIONS = [
     "Trentino-Alto Adige", "Umbria", "Valle d'Aosta", "Veneto",
 ]
 
+# Sigle provincia -> regione, per le piste che riportano solo la provincia
+# nel nome (es. KRM: "MISANINO KCE (RN)").
+PROVINCE_TO_REGION = {
+    # Abruzzo
+    "AQ": "Abruzzo", "CH": "Abruzzo", "PE": "Abruzzo", "TE": "Abruzzo",
+    # Basilicata
+    "MT": "Basilicata", "PZ": "Basilicata",
+    # Calabria
+    "CS": "Calabria", "CZ": "Calabria", "KR": "Calabria", "RC": "Calabria", "VV": "Calabria",
+    # Campania
+    "AV": "Campania", "BN": "Campania", "CE": "Campania", "NA": "Campania", "SA": "Campania",
+    # Emilia-Romagna
+    "BO": "Emilia-Romagna", "FC": "Emilia-Romagna", "FE": "Emilia-Romagna",
+    "MO": "Emilia-Romagna", "PC": "Emilia-Romagna", "PR": "Emilia-Romagna",
+    "RA": "Emilia-Romagna", "RE": "Emilia-Romagna", "RN": "Emilia-Romagna",
+    # Friuli-Venezia Giulia
+    "GO": "Friuli-Venezia Giulia", "PN": "Friuli-Venezia Giulia",
+    "TS": "Friuli-Venezia Giulia", "UD": "Friuli-Venezia Giulia",
+    # Lazio
+    "FR": "Lazio", "LT": "Lazio", "RI": "Lazio", "RM": "Lazio", "VT": "Lazio",
+    # Liguria
+    "GE": "Liguria", "IM": "Liguria", "SP": "Liguria", "SV": "Liguria",
+    # Lombardia
+    "BG": "Lombardia", "BS": "Lombardia", "CO": "Lombardia", "CR": "Lombardia",
+    "LC": "Lombardia", "LO": "Lombardia", "MB": "Lombardia", "MI": "Lombardia",
+    "MN": "Lombardia", "PV": "Lombardia", "SO": "Lombardia", "VA": "Lombardia",
+    # Marche
+    "AN": "Marche", "AP": "Marche", "FM": "Marche", "MC": "Marche", "PU": "Marche",
+    # Molise
+    "CB": "Molise", "IS": "Molise",
+    # Piemonte
+    "AL": "Piemonte", "AT": "Piemonte", "BI": "Piemonte", "CN": "Piemonte",
+    "NO": "Piemonte", "TO": "Piemonte", "VB": "Piemonte", "VC": "Piemonte",
+    # Puglia
+    "BA": "Puglia", "BR": "Puglia", "BT": "Puglia", "FG": "Puglia", "LE": "Puglia", "TA": "Puglia",
+    # Sardegna
+    "CA": "Sardegna", "NU": "Sardegna", "OR": "Sardegna", "SS": "Sardegna", "SU": "Sardegna",
+    # Sicilia
+    "AG": "Sicilia", "CL": "Sicilia", "CT": "Sicilia", "EN": "Sicilia", "ME": "Sicilia",
+    "PA": "Sicilia", "RG": "Sicilia", "SR": "Sicilia", "TP": "Sicilia",
+    # Toscana
+    "AR": "Toscana", "FI": "Toscana", "GR": "Toscana", "LI": "Toscana", "LU": "Toscana",
+    "MS": "Toscana", "PI": "Toscana", "PO": "Toscana", "PT": "Toscana", "SI": "Toscana",
+    # Trentino-Alto Adige
+    "BZ": "Trentino-Alto Adige", "TN": "Trentino-Alto Adige",
+    # Umbria
+    "PG": "Umbria", "TR": "Umbria",
+    # Valle d'Aosta
+    "AO": "Valle d'Aosta",
+    # Veneto
+    "BL": "Veneto", "PD": "Veneto", "RO": "Veneto", "TV": "Veneto", "VE": "Veneto",
+    "VI": "Veneto", "VR": "Veneto",
+}
+
+def _normalize(text):
+    """Minuscole, trattini come spazi, apostrofi uniformati: cosi'
+    "Emilia Romagna" nel titolo matcha "Emilia-Romagna" della lista."""
+    return text.lower().replace("-", " ").replace("’", "'")
+
 def load_track_regions():
     """Mappa nome pista (lowercase) -> region dalla tabella tracks."""
     if not supabase:
@@ -68,18 +128,28 @@ def load_track_regions():
         print(f"Avviso: lookup tabella tracks fallito ({e}); region non popolata.")
         return {}
 
-def resolve_region(track_name, track_regions):
-    """Regione dell'evento: match esatto sulla tabella tracks, altrimenti
-    fallback con l'euristica della migration 001 (nome regione dentro il
-    nome pista). None se non determinabile: dato incompleto ammesso."""
-    if not track_name:
-        return None
-    key = track_name.strip().lower()
-    if key in track_regions:
-        return track_regions[key]
+def resolve_region(track_name, title, track_regions):
+    """Regione dell'evento, in ordine di affidabilita':
+    1. match esatto sulla tabella tracks;
+    2. nome regione dentro nome pista O titolo (molte fonti la mettono
+       solo nel titolo, es. "Gara Kart in Lombardia - 25 Luglio");
+    3. sigla provincia tra parentesi, es. "MISANINO KCE (RN)".
+    None se non determinabile: dato incompleto ammesso."""
+    if track_name:
+        key = track_name.strip().lower()
+        if key in track_regions:
+            return track_regions[key]
+
+    haystack = _normalize(f"{track_name or ''} {title or ''}")
     for region in ITALIAN_REGIONS:
-        if region.lower() in key:
+        if _normalize(region) in haystack:
             return region
+
+    for code in re.findall(r"\(([A-Za-z]{2})\)", f"{track_name or ''} {title or ''}"):
+        region = PROVINCE_TO_REGION.get(code.upper())
+        if region:
+            return region
+
     return None
 
 def resolve_format(title):
@@ -101,7 +171,7 @@ def insert_events_to_supabase(events_list):
     track_regions = load_track_regions()
     for row in data_to_insert:
         if not row.get("region"):
-            row["region"] = resolve_region(row.get("track_name"), track_regions)
+            row["region"] = resolve_region(row.get("track_name"), row.get("title"), track_regions)
         if not row.get("format"):
             row["format"] = resolve_format(row.get("title"))
 
