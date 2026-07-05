@@ -5,21 +5,20 @@ K-Hub è una piattaforma web per aggregare eventi di rental karting in Italia e 
 
 ## Stack reale (NON Flutter — attenzione, vecchi prompt lo presumevano)
 - **Frontend**: React 19 + Vite + Tailwind CSS v4, react-router-dom v7, lucide-react per le icone. Stile "brutalist/sportivo" con CSS custom in `frontend/src/index.css` (variabili tipo `--castrol-red`, classi `card-snappy`, `btn-snappy`).
-- **Backend**: Supabase (PostgreSQL + Auth), RLS attiva. Schema in `database_schema.sql`.
-- **Scraper**: Python (`scraper/scraper_base.py`) con Playwright + playwright-stealth + BeautifulSoup; ingerisce le gare SWS italiane da sodiwseries.com nella tabella `events`. Gira su Windows: attenzione all'encoding nelle print (evitare emoji/caratteri non-ASCII in output console).
+- **Backend**: Supabase (PostgreSQL + Auth), RLS attiva. Schema base in `database_schema.sql`, esteso dalle migration in `migrations/` (001→004, applicate al DB live a mano via SQL editor: il CLI Supabase non ha access token su questa macchina — mai tentare scritture di test sul DB di produzione).
+- **Scraper**: Python con Playwright + playwright-stealth + BeautifulSoup, 4 fonti: SWS (`scraper_base.py`, Chrome reale non-headless), WeRace/XRace/KRM (orchestrate da `run_all.py`). Scrive nella tabella `events` con upsert dedup su `(source_url, event_date)` e arricchisce region/format a scrape-time. Gira su Windows: attenzione all'encoding nelle print (evitare emoji/caratteri non-ASCII in output console).
 - **Deploy/vincoli**: solo free tier Supabase e Vercel. Nessuna spesa.
 
-## Stato attuale
-- DB: solo due tabelle — `tracks` (id, name, region, city, website_url) ed `events` (id, title, track_id FK, track_name denormalizzato, event_date, event_type, engine_type, price, is_beginner_friendly, source_url, scraped_at, created_at).
-- Pagine React: Home, Calendar (lista eventi + filtri), TracksDirectory, RkcAsi, OrganizerDashboard (inserimento manuale eventi), Auth.
-- Scraper SWS funzionante (Playwright non-headless con Chrome reale dell'utente).
+## Stato attuale (luglio 2026 — Step 2 e 3 completati)
+- DB live (ref `yiysqhbtmjdpooznsgbg`) allineato a `migrations/001→004`: `tracks`, `events` (+ region, format, created_by), `profiles`, `race_results`, `lap_times`, `regulations`; vista `v_pilot_leaderboard`; RPC `get_pilot_stats(p_pilot_id)` e `get_event_standings(p_event_id)`; indice UNIQUE completo su `events(source_url, event_date)`.
+- Frontend: TUTTE le query dati passano dal layer repository in `frontend/src/lib/` (`eventsRepository`, `pilotsRepository`, `tracksRepository`, `resultsRepository`, cache TTL in `cache.js`); il client Supabase esiste solo in `lib/supabase.js` e le pagine lo usano direttamente solo per l'auth.
+- Pagine React: Home, Calendar (filtri veri da DB + paginazione), TracksDirectory, RkcAsi, Leaderboard (classifica nazionale), Dashboard pilota (KPI + trend punti + storico), EventDetails (classifica + accordion tempi), OrganizerDashboard (inserimento eventi + risultati/tempi con import bulk), Auth.
 
-## Problemi noti / debito tecnico (da analisi architetturale)
-1. **Manca del tutto il layer statistiche**: nessuna tabella per piloti, risultati, tempi sul giro, classifiche. È il prossimo grande blocco di lavoro.
-2. **Query e filtri inefficienti**: `Calendar.jsx` fa `select('*')` senza paginazione e filtra in JavaScript; i filtri regione/formato sono mockati sul titolo. Servono colonne dedicate (region, format), indici su `event_date`/`event_type`, e filtri spostati nelle query Supabase.
-3. **Client Supabase duplicato**: ogni pagina crea il proprio client con `createClient`. Esiste `frontend/src/lib/supabase.js` — usare SOLO quello ovunque.
-4. **RLS troppo permissiva**: la policy INSERT su `events` è `WITH CHECK (true)` — chiunque con la anon key può inserire. Nessuna deduplica lato scraper (rischio eventi duplicati a ogni run).
-5. **Date non uniformi**: `OrganizerDashboard` accetta la data come testo libero (es. "15-08-2026") mentre il DB ha `event_date DATE` e lo scraper scrive YYYY-MM-DD. Uniformare con input type="date".
+## Problemi noti / debito tecnico
+1. **RLS lasca su risultati**: le policy su `race_results`/`lap_times` sono `FOR ALL TO authenticated WITH CHECK (true)` — qualsiasi utente loggato può inserire/modificare risultati altrui. Accettato per l'MVP; in futuro serve un ruolo organizer.
+2. **Scraper non testato post-refactor**: l'upsert dedup e l'arricchimento region/format non hanno ancora avuto un run reale contro il DB live.
+3. **Nessuna UI di modifica/cancellazione risultati**: OrganizerDashboard permette solo l'inserimento; errori di battitura si correggono solo dal DB.
+4. **Artefatti di debug tracciati in git**: `scraper/sws_races.html` + `sws_races_files/`, `debug_screenshot.png` — da pulire dopo aver verificato che l'HTML non serva come fixture.
 
 ## Convenzioni
 - Lavorare in iterazioni: proporre → conferma → implementare.
@@ -28,6 +27,7 @@ K-Hub è una piattaforma web per aggregare eventi di rental karting in Italia e 
 - UI: look sportivo/tecnico, numeri leggibili, tabelle responsive anche su schermi stretti.
 - Commit piccoli e descrittivi.
 
-## Roadmap concordata
-- **Step 2 — Backend e logiche statistiche**: estendere lo schema (pilots/profiles, results, lap_times, regulations legati agli eventi), scrivere migration SQL, viste/RPC per medie, best lap e classifiche, layer di servizio JS (repository) con caching leggero, deduplica scraper, fix RLS.
-- **Step 3 — Frontend e data visualization**: Dashboard Pilota (gare disputate, podi, best lap), Hub Eventi migliorato (filtri veri da DB), tabelle classifiche/tempi responsive. Palette motorsport, grafici leggeri (fl_chart NON esiste in React: usare widget custom o una lib leggera solo se necessario).
+## Roadmap
+- **Step 2 — Backend e logiche statistiche**: ✅ completato (luglio 2026) — schema esteso via migration 001→004, viste/RPC, layer repository con caching, deduplica scraper, fix RLS.
+- **Step 3 — Frontend e data visualization**: ✅ completato (luglio 2026) — Dashboard Pilota, Leaderboard nazionale, EventDetails con classifiche/tempi, filtri veri da DB, inserimento risultati, fix region/format scraper. Grafici con CSS/SVG custom, nessuna lib aggiuntiva.
+- **Possibili sviluppi futuri (non concordati)**: run periodico dello scraper, ruolo organizer con RLS più stretta, modifica/cancellazione risultati, deploy su Vercel.
