@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getPilotStats, getPilotRaceHistory } from '../lib/pilotsRepository';
 import { formatTimeMs } from '../lib/utils';
-import { Trophy, Flag, Timer, ChevronRight, Activity } from 'lucide-react';
+import { Trophy, Flag, Timer, ChevronRight, Activity, Gauge } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Dashboard() {
@@ -90,6 +90,16 @@ function Dashboard() {
               {stats.best_lap_ms ? formatTimeMs(stats.best_lap_ms) : '--:--.---'}
             </div>
             <div style={{ fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Miglior Tempo Assoluto</div>
+          </div>
+        </div>
+
+        <div className="card-snappy" style={{ borderBottomColor: 'var(--text-muted)' }}>
+          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <Gauge size={40} style={{ color: 'var(--text-muted)', marginBottom: '10px' }} />
+            <div className="font-mono" style={{ fontSize: '2.5rem', fontWeight: '900', lineHeight: '1', margin: '6px 0' }}>
+              {stats.avg_lap_ms ? formatTimeMs(Math.round(stats.avg_lap_ms)) : '--:--.---'}
+            </div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Media sul Giro</div>
           </div>
         </div>
       </div>

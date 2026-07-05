@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar as CalendarIcon, MapPin, Flag, ChevronRight, Filter } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Calendar as CalendarIcon, MapPin, Flag, ChevronRight, Filter, Trophy } from 'lucide-react';
 import { getEvents } from '../lib/eventsRepository';
 import { ITALIAN_REGIONS } from '../lib/constants';
 
@@ -178,15 +179,24 @@ function Calendar() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
-                      <a
-                        href={event.source_url}
-                        target="_blank"
-                        rel="noreferrer"
+                      <Link
+                        to={`/event/${event.id}`}
                         className="btn-snappy"
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'center', fontSize: '0.9rem' }}
                       >
-                        Dettagli & Iscrizione <ChevronRight size={16} />
-                      </a>
+                        <Trophy size={16} /> Classifica & Tempi
+                      </Link>
+                      {event.source_url && (
+                        <a
+                          href={event.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-outline-snappy"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'center', fontSize: '0.9rem' }}
+                        >
+                          Dettagli & Iscrizione <ChevronRight size={16} />
+                        </a>
+                      )}
                       <a
                         href={generateCalendarLink(event)}
                         target="_blank"
