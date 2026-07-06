@@ -25,6 +25,12 @@ export function formatEventDate(dateStr) {
   return dateFormatter.format(date).replace(/\./g, '').toUpperCase();
 }
 
+// 'gara_singola' -> 'GARA SINGOLA'
+export function formatLabel(value) {
+  if (!value) return '';
+  return String(value).replace(/_/g, ' ').toUpperCase();
+}
+
 export function generateCalendarLink(event) {
   const date = parseEventDate(event.event_date);
   let dates = '';

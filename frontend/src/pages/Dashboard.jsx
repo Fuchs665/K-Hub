@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getPilotStats, getPilotRaceHistory } from '../lib/pilotsRepository';
 import { formatTimeMs } from '../lib/utils';
+import { formatEventDate } from '../lib/format';
 import { Trophy, Flag, Timer, ChevronRight, Activity, Gauge } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -138,8 +139,13 @@ function Dashboard() {
       {/* Storico Gare */}
       <h2 style={{ marginBottom: '20px' }}>Storico Gare</h2>
       {races.length === 0 ? (
-        <div style={{ padding: '40px 0', color: 'var(--text-muted)' }}>
-          Nessuna gara registrata. Cerca nel calendario ed iscriviti!
+        <div className="empty-state" style={{ marginTop: 0 }}>
+          <Flag size={40} />
+          <h3>Nessuna gara registrata</h3>
+          <p>I tuoi risultati appariranno qui dopo la prima gara con classifica caricata.</p>
+          <Link to="/calendar" className="btn-snappy" style={{ marginTop: '12px', fontSize: '0.9rem' }}>
+            Trova una gara
+          </Link>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -147,7 +153,7 @@ function Dashboard() {
             <div key={race.id} style={{ background: 'white', border: '2px solid var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 20px', flexWrap: 'wrap', gap: '15px' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                  {race.events?.event_date} - {race.events?.track_name}
+                  {formatEventDate(race.events?.event_date)} — {race.events?.track_name}
                 </span>
                 <span style={{ fontSize: '1.2rem', fontWeight: '800', textTransform: 'uppercase' }}>
                   {race.events?.title}

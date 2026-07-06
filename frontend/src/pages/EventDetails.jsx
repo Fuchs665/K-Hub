@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getEventById, getEventLapTimes } from '../lib/eventsRepository';
 import { getEventStandings } from '../lib/pilotsRepository';
 import { formatTimeMs } from '../lib/utils';
+import { formatEventDate, formatLabel } from '../lib/format';
 import { Trophy, Timer, ChevronLeft, MapPin, Calendar, Activity } from 'lucide-react';
 
 function EventDetails() {
@@ -75,10 +76,12 @@ function EventDetails() {
           </div>
           <div className="info-box info-box-date">
             <Calendar size={18} />
-            <span>{event.event_date}</span>
+            <span>{formatEventDate(event.event_date)}</span>
           </div>
-          <div className="tag tag-sprint" style={{ alignSelf: 'center' }}>{event.event_type}</div>
-          {event.format && <div className="tag" style={{ alignSelf: 'center' }}>{event.format}</div>}
+          <div className={`tag ${event.event_type?.toLowerCase() === 'sprint' ? 'tag-sprint' : 'tag-endurance'}`} style={{ alignSelf: 'center' }}>
+            {event.event_type}
+          </div>
+          {event.format && <div className="tag" style={{ alignSelf: 'center' }}>{formatLabel(event.format)}</div>}
         </div>
       </div>
 

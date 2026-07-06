@@ -79,11 +79,12 @@ function Leaderboard() {
                 ) : (
                   pilots.map((pilot, idx) => {
                     const rank = idx + 1;
-                    const isPodium = rank <= 3;
+                    const medalColors = { 1: '#D4AF37', 2: '#8E9196', 3: '#B08D57' };
+                    const medalColor = medalColors[rank];
                     return (
                       <tr key={pilot.pilot_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                        <td style={{ padding: '16px', textAlign: 'center', fontWeight: '900', fontSize: '1.2rem', color: isPodium ? 'var(--castrol-green)' : 'var(--text-main)' }}>
-                          {isPodium ? (
+                        <td style={{ padding: '16px', textAlign: 'center', fontWeight: '900', fontSize: '1.2rem', color: medalColor || 'var(--text-main)' }}>
+                          {medalColor ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               <Medal size={18} /> {rank}
                             </span>
