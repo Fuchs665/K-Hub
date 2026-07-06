@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { getUpcomingEvents } from '../lib/eventsRepository';
+import { getUpcomingEvents, getUpcomingEventsCount } from '../lib/eventsRepository';
+import { getTracksCount } from '../lib/tracksRepository';
 import { Link } from 'react-router-dom';
 import EventCard, { EventCardSkeleton } from '../components/EventCard';
 
 function Home() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ events: null, tracks: null });
 
   useEffect(() => {
     fetchEvents();
+    fetchStats();
   }, []);
 
   async function fetchEvents() {
@@ -23,20 +26,49 @@ function Home() {
     }
   }
 
+  async function fetchStats() {
+    try {
+      const [events, tracks] = await Promise.all([getUpcomingEventsCount(), getTracksCount()]);
+      setStats({ events, tracks });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  }
+
   return (
     <div className="container main-content">
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '60px', marginTop: '40px' }}>
         <h1 style={{ fontSize: '4rem', lineHeight: '1', marginBottom: '16px' }}>K-HUB ITALIA</h1>
+        <div className="checker-strip" style={{ marginBottom: '24px' }} />
         <p style={{ color: 'var(--text-muted)', fontSize: '1.5rem', maxWidth: '600px', marginBottom: '30px' }}>
           Il portale definitivo per i piloti di Rental Kart. Trova gare, campionati e piste in tutta Italia.
         </p>
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <Link to="/calendar" className="btn-snappy">
             TROVA UNA GARA
           </Link>
           <Link to="/tracks" className="btn-outline-snappy" style={{ padding: '12px 24px', fontSize: '1rem' }}>
             ESPLORA LE PISTE
           </Link>
+        </div>
+
+        <div className="hero-stats">
+          {stats.events !== null && stats.events > 0 && (
+            <div className="stat-chip">
+              <span className="stat-value">{stats.events}</span>
+              <span className="stat-label">Gare in calendario</span>
+            </div>
+          )}
+          {stats.tracks !== null && stats.tracks > 0 && (
+            <div className="stat-chip">
+              <span className="stat-value">{stats.tracks}</span>
+              <span className="stat-label">Piste censite</span>
+            </div>
+          )}
+          <div className="stat-chip">
+            <span className="stat-value">4</span>
+            <span className="stat-label">Fonti monitorate</span>
+          </div>
         </div>
       </div>
 

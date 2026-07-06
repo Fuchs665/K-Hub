@@ -75,6 +75,24 @@ export async function getUpcomingEvents(limit = 3) {
   return data || [];
 }
 
+// Solo count, nessuna riga trasferita. La chiave condivide il prefisso
+// 'upcomingEvents:' così insertEvent la invalida insieme alla lista.
+export async function getUpcomingEventsCount() {
+  const cacheKey = 'upcomingEvents:count';
+  const cached = getCached(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { count, error } = await supabase
+    .from('events')
+    .select('id', { count: 'exact', head: true })
+    .gte('event_date', today);
+
+  if (error) throw error;
+  setCached(cacheKey, count ?? 0);
+  return count ?? 0;
+}
+
 export async function insertEvent(eventData) {
   const { data, error } = await supabase.from('events').insert([eventData]).select();
   if (error) throw error;

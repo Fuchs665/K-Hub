@@ -16,3 +16,18 @@ export async function getTracks() {
   setCached(cacheKey, data || [], 5 * 60_000);
   return data || [];
 }
+
+// Solo count, nessuna riga trasferita.
+export async function getTracksCount() {
+  const cacheKey = 'tracks:count';
+  const cached = getCached(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const { count, error } = await supabase
+    .from('tracks')
+    .select('id', { count: 'exact', head: true });
+
+  if (error) throw error;
+  setCached(cacheKey, count ?? 0, 5 * 60_000);
+  return count ?? 0;
+}
