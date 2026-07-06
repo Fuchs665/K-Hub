@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getRkcAsiEvents } from '../lib/eventsRepository';
-import { MapPin, Calendar, ChevronRight, ChevronLeft, Trophy, ExternalLink } from 'lucide-react';
+import { formatEventDate } from '../lib/format';
+import { MapPin, ChevronRight, ChevronLeft, Trophy } from 'lucide-react';
 
 function RkcAsi() {
   const [events, setEvents] = useState([]);
@@ -98,7 +99,7 @@ function RkcAsi() {
                 <div key={event.id} className="card-snappy">
                   <div className="card-header" style={{ background: 'var(--castrol-red)', color: 'white', borderColor: 'var(--castrol-red)' }}>
                     <span className="font-mono" style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
-                      {event.event_date}
+                      {formatEventDate(event.event_date)}
                     </span>
                   </div>
                   
