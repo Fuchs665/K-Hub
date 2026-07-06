@@ -583,3 +583,139 @@ h1, h2, h3, h4 {
 .info-box-date svg {
   color: var(--castrol-red);
 }
+
+/* ============================================================
+   Pagina Le Piste — mappa Italia + lista filtrata
+   ============================================================ */
+.tracks-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) 1fr;
+  gap: 30px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.tracks-map-col {
+  position: sticky;
+  top: 90px;
+}
+
+.italy-map {
+  width: 100%;
+  height: auto;
+  max-height: 68vh;
+  display: block;
+}
+
+/* Regioni della mappa */
+.italy-region {
+  fill: #cbd3dc;
+  stroke: #ffffff;
+  stroke-width: 0.7;
+  stroke-linejoin: round;
+  transition: fill 0.15s, fill-opacity 0.15s;
+}
+
+.italy-region.empty {
+  cursor: default;
+}
+
+.italy-region.has-tracks {
+  fill: var(--castrol-red);
+  fill-opacity: 0.82;
+  cursor: pointer;
+}
+
+.italy-region.has-tracks:hover {
+  fill-opacity: 1;
+}
+
+.italy-region.has-tracks:focus {
+  outline: none;
+}
+
+.italy-region.has-tracks:focus-visible {
+  stroke: var(--text-main);
+  stroke-width: 1.6;
+}
+
+.italy-region.selected,
+.italy-region.selected:hover {
+  fill: var(--text-main);
+  fill-opacity: 1;
+  stroke: var(--castrol-red);
+  stroke-width: 1.6;
+}
+
+/* Legenda */
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--text-main);
+  flex-shrink: 0;
+}
+
+.swatch-active { background: var(--castrol-red); }
+.swatch-empty { background: #cbd3dc; }
+
+/* Testata lista */
+.tracks-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.reset-region-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+.tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+/* Su schermi stretti: mappa sopra, lista sotto */
+@media (max-width: 860px) {
+  .tracks-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .tracks-map-col {
+    position: static;
+  }
+
+  .italy-map {
+    max-height: 52vh;
+    margin: 0 auto;
+    max-width: 340px;
+  }
+}
