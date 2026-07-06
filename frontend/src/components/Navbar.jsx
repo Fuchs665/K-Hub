@@ -44,7 +44,7 @@ function Navbar() {
         {/* Desktop: riga inline — Mobile: dropdown sotto la navbar */}
         <div className={isOpen ? 'nav-menu open' : 'nav-menu'}>
           <NavLink to="/calendar" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>Calendario</NavLink>
-          <NavLink to="/leaderboard" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>Classifica</NavLink>
+          <NavLink to="/guida-rental" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>Guida Rental</NavLink>
           <NavLink to="/tracks" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>Le Piste</NavLink>
           <NavLink to="/rkc-asi" className={({ isActive }) => isActive ? "nav-link active rkc-link" : "nav-link rkc-link"} onClick={closeMenu}>RKC ASI</NavLink>
           

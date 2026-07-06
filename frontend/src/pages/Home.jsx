@@ -72,6 +72,17 @@ function Home() {
         </div>
       </div>
 
+      {/* Banner Guida Neofiti */}
+      <div style={{ background: 'var(--bg-card)', border: '2px solid var(--text-main)', borderBottom: '6px solid var(--castrol-red)', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Prima volta al rental?</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Scopri format, glossario e come iscriverti alla tua prima gara.</div>
+        </div>
+        <Link to="/guida-rental" className="btn-outline-snappy" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
+          LEGGI LA GUIDA
+        </Link>
+      </div>
+
       {/* Banner RKC ASI */}
       <div style={{ background: 'var(--text-main)', color: 'white', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '16px', borderRadius: '4px' }}>
         <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Scopri il percorso per qualificarsi alle finali nazionali RKC ASI</div>

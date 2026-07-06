@@ -9,7 +9,7 @@ import OrganizerDashboard from './pages/OrganizerDashboard';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import EventDetails from './pages/EventDetails';
-import Leaderboard from './pages/Leaderboard';
+import GuidaRental from './pages/GuidaRental';
 import './index.css';
 
 function App() {
@@ -25,7 +25,7 @@ function App() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/event/:id" element={<EventDetails />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/guida-rental" element={<GuidaRental />} />
       </Routes>
     </Router>
   );
