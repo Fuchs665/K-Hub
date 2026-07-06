@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getUpcomingEvents } from '../lib/eventsRepository';
-import { Calendar, MapPin, Flag, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import EventCard, { EventCardSkeleton } from '../components/EventCard';
 
 function Home() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
@@ -22,20 +22,6 @@ function Home() {
       setLoading(false);
     }
   }
-
-  const generateCalendarLink = (event) => {
-    let dates = "";
-    if (event.event_date) {
-      const parts = event.event_date.split('-');
-      if (parts.length === 3) {
-        const year = parts[2].length === 4 ? parts[2] : (parts[0].length === 4 ? parts[0] : "2026");
-        const month = parts[1].padStart(2, '0');
-        const day = (parts[0].length === 4 ? parts[2] : parts[0]).padStart(2, '0');
-        dates = `&dates=${year}${month}${day}/${year}${month}${day}`;
-      }
-    }
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}${dates}&details=${encodeURIComponent("Iscrizione: " + event.source_url)}&location=${encodeURIComponent(event.track_name)}`;
-  };
 
   return (
     <div className="container main-content">
@@ -68,59 +54,19 @@ function Home() {
       </div>
 
       {loading ? (
+        <div className="events-grid">
+          <EventCardSkeleton />
+          <EventCardSkeleton />
+          <EventCardSkeleton />
+        </div>
+      ) : upcomingEvents.length === 0 ? (
         <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)' }} className="font-mono">
-          // CARICAMENTO TELEMETRIA...
+          // NESSUN EVENTO IN ARRIVO — TORNA A TROVARCI PRESTO
         </div>
       ) : (
         <div className="events-grid">
           {upcomingEvents.map(event => (
-            <div key={event.id} className="card-snappy">
-              <div className="card-header">
-                <span className={`tag ${event.event_type?.toLowerCase() === 'sprint' ? 'tag-sprint' : 'tag-endurance'}`}>
-                  {event.event_type}
-                </span>
-                <span className="font-mono" style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
-                  {event.engine_type}
-                </span>
-              </div>
-              
-              <div className="card-body">
-                <h3 className="card-title">{event.title}</h3>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
-                  <div className="info-box info-box-location">
-                    <MapPin size={18} />
-                    <span>{event.track_name}</span>
-                  </div>
-                  
-                  <div className="info-box info-box-date">
-                    <Calendar size={18} />
-                    <span>{event.event_date}</span>
-                  </div>
-                </div>
-                
-                <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
-                  <a 
-                    href={event.source_url} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="btn-snappy" 
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'center', fontSize: '0.9rem' }}
-                  >
-                    Dettagli & Iscrizione <ChevronRight size={16} />
-                  </a>
-                  <a 
-                    href={generateCalendarLink(event)} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="btn-outline-snappy" 
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'center', fontSize: '0.85rem' }}
-                  >
-                    <Calendar size={14} /> Aggiungi al Calendario
-                  </a>
-                </div>
-              </div>
-            </div>
+            <EventCard key={event.id} event={event} />
           ))}
         </div>
       )}
