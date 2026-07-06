@@ -416,6 +416,27 @@ h1, h2, h3, h4 {
   color: var(--text-muted);
 }
 
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 60px 24px;
+  margin-top: 40px;
+  text-align: center;
+  background: var(--bg-card);
+  border: 2px dashed var(--text-muted);
+}
+
+.empty-state svg {
+  color: var(--castrol-red);
+}
+
+.empty-state p {
+  color: var(--text-muted);
+}
+
 /* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
   h1 {

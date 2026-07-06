@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, Flag, X } from 'lucide-react';
 import { getEvents } from '../lib/eventsRepository';
 import { ITALIAN_REGIONS } from '../lib/constants';
 import EventCard, { EventCardSkeleton } from '../components/EventCard';
@@ -58,6 +58,17 @@ function Calendar() {
     setPage(1);
   };
 
+  const hasActiveFilters =
+    filterType !== 'ALL' || filterKart !== 'ALL' || filterFormat !== 'ALL' || filterRegion !== 'ALL';
+
+  const resetFilters = () => {
+    setFilterType('ALL');
+    setFilterKart('ALL');
+    setFilterFormat('ALL');
+    setFilterRegion('ALL');
+    setPage(1);
+  };
+
   return (
     <div className="container main-content">
       <div style={{ marginBottom: '30px' }}>
@@ -75,8 +86,9 @@ function Calendar() {
         </div>
 
         <div className="filter-group" style={{ flex: '1 1 200px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Tipologia Gara</label>
+          <label htmlFor="filter-type" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Tipologia Gara</label>
           <select
+            id="filter-type"
             className="filter-select"
             value={filterType}
             onChange={handleFilterChange(setFilterType)}
@@ -87,8 +99,9 @@ function Calendar() {
         </div>
 
         <div className="filter-group" style={{ flex: '1 1 200px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Tipo Kart</label>
+          <label htmlFor="filter-kart" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Tipo Kart</label>
           <select
+            id="filter-kart"
             className="filter-select"
             value={filterKart}
             onChange={handleFilterChange(setFilterKart)}
@@ -99,8 +112,9 @@ function Calendar() {
         </div>
 
         <div className="filter-group" style={{ flex: '1 1 200px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Formato</label>
+          <label htmlFor="filter-format" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Formato</label>
           <select
+            id="filter-format"
             className="filter-select"
             value={filterFormat}
             onChange={handleFilterChange(setFilterFormat)}
@@ -111,8 +125,9 @@ function Calendar() {
         </div>
 
         <div className="filter-group" style={{ flex: '1 1 200px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Regione</label>
+          <label htmlFor="filter-region" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Regione</label>
           <select
+            id="filter-region"
             className="filter-select"
             value={filterRegion}
             onChange={handleFilterChange(setFilterRegion)}
@@ -132,17 +147,35 @@ function Calendar() {
         <div style={{ padding: '40px 0', color: 'var(--castrol-red)' }}>{errorMsg}</div>
       ) : (
         <>
-          <div className="events-grid">
-            {events.length === 0 ? (
-              <div style={{ padding: '40px 0', color: 'var(--text-muted)' }}>
-                Nessuna gara trovata con i filtri selezionati.
-              </div>
-            ) : (
-              events.map(event => (
-                <EventCard key={event.id} event={event} />
-              ))
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <span className="font-mono" style={{ fontWeight: 'bold' }}>
+              {total} {total === 1 ? 'GARA TROVATA' : 'GARE TROVATE'}
+            </span>
+            {hasActiveFilters && (
+              <button className="btn-outline-snappy" style={{ fontSize: '0.8rem', padding: '6px 12px' }} onClick={resetFilters}>
+                <X size={14} /> Azzera filtri
+              </button>
             )}
           </div>
+
+          {events.length === 0 ? (
+            <div className="empty-state">
+              <Flag size={40} />
+              <h3>Nessuna gara trovata</h3>
+              <p>Prova ad allargare i filtri di ricerca.</p>
+              {hasActiveFilters && (
+                <button className="btn-snappy" style={{ marginTop: '12px', fontSize: '0.9rem' }} onClick={resetFilters}>
+                  Azzera filtri
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="events-grid">
+              {events.map(event => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          )}
 
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '40px' }}>
