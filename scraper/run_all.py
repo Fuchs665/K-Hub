@@ -4,6 +4,7 @@ from scraper_base import insert_events_to_supabase
 from werace_scraper import scrape_werace_events
 from xrace_scraper import scrape_xrace_events
 from krm_scraper import scrape_krm_events
+from rkc_asi_scraper import scrape_rkc_asi_events
 
 def run_all_scrapers():
     print("=== INIZIO ESTRAZIONE DA TUTTE LE FONTI ===")
@@ -30,6 +31,13 @@ def run_all_scrapers():
         all_events.extend(krm_events)
     except Exception as e:
         print(f"Errore fatale KRM: {e}")
+
+    # 4. RKC ASI (calendario ufficiale campionati federali)
+    try:
+        rkc_asi_events = scrape_rkc_asi_events()
+        all_events.extend(rkc_asi_events)
+    except Exception as e:
+        print(f"Errore fatale RKC ASI: {e}")
 
     print(f"\n=== FINE ESTRAZIONE: Totale {len(all_events)} eventi raccolti ===")
 

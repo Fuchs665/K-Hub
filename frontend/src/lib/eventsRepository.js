@@ -79,7 +79,27 @@ export async function insertEvent(eventData) {
   clearCached('events:');
   clearCached('upcomingEvents:');
   clearCached('eventsLite:');
+  clearCached('rkcAsiEvents:');
   return data;
+}
+
+// Tappe ufficiali RKC ASI (events.series = 'rkc_asi'), future, per la pagina RkcAsi.
+export async function getRkcAsiEvents() {
+  const cacheKey = 'rkcAsiEvents:upcoming';
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('series', 'rkc_asi')
+    .gte('event_date', today)
+    .order('event_date', { ascending: true });
+
+  if (error) throw error;
+  setCached(cacheKey, data || []);
+  return data || [];
 }
 
 // Lista leggera per select/dropdown (es. inserimento risultati).
