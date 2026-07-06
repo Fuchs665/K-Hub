@@ -37,26 +37,6 @@ export async function getEvents({
   return result;
 }
 
-export async function getRkcAsiEvents({ region = 'ALL' } = {}) {
-  const cacheKey = `rkcAsiEvents:${region}`;
-  const cached = getCached(cacheKey);
-  if (cached) return cached;
-
-  let query = supabase
-    .from('events')
-    .select('*')
-    .or('title.ilike.%RKC%,title.ilike.%ASI%')
-    .order('event_date', { ascending: true });
-
-  if (region !== 'ALL') query = query.eq('region', region);
-
-  const { data, error } = await query;
-  if (error) throw error;
-
-  setCached(cacheKey, data || []);
-  return data || [];
-}
-
 export async function getUpcomingEvents(limit = 3) {
   const cacheKey = `upcomingEvents:${limit}`;
   const cached = getCached(cacheKey);
@@ -97,7 +77,6 @@ export async function insertEvent(eventData) {
   const { data, error } = await supabase.from('events').insert([eventData]).select();
   if (error) throw error;
   clearCached('events:');
-  clearCached('rkcAsiEvents:');
   clearCached('upcomingEvents:');
   clearCached('eventsLite:');
   return data;

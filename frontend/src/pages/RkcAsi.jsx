@@ -1,11 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { getRkcAsiEvents } from '../lib/eventsRepository';
-import { formatEventDate } from '../lib/format';
-import { MapPin, ChevronRight, ChevronLeft, Trophy } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ChevronRight, ChevronLeft, Trophy } from 'lucide-react';
 
 function RkcAsi() {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeRegion, setActiveRegion] = useState('Lombardia');
   const tabsRef = useRef(null);
 
@@ -18,28 +14,11 @@ function RkcAsi() {
 
   // Hardcoded regions for the tabs
   const regions = [
-    'Abruzzo', 'Basilicata', 'Calabria', 'Campania', 'Emilia-Romagna', 
-    'Friuli-Venezia Giulia', 'Lazio', 'Liguria', 'Lombardia', 'Marche', 
-    'Molise', 'Piemonte', 'Puglia', 'Sardegna', 'Sicilia', 'Toscana', 
+    'Abruzzo', 'Basilicata', 'Calabria', 'Campania', 'Emilia-Romagna',
+    'Friuli-Venezia Giulia', 'Lazio', 'Liguria', 'Lombardia', 'Marche',
+    'Molise', 'Piemonte', 'Puglia', 'Sardegna', 'Sicilia', 'Toscana',
     'Trentino-Alto Adige', 'Umbria', "Valle d'Aosta", 'Veneto'
   ];
-
-  useEffect(() => {
-    fetchEvents(activeRegion);
-  }, [activeRegion]);
-
-  async function fetchEvents(region) {
-    try {
-      setLoading(true);
-      const data = await getRkcAsiEvents({ region });
-      setEvents(data);
-    } catch (error) {
-      console.error('Error fetching RKC events:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
 
   return (
     <div className="container main-content">
@@ -54,16 +33,15 @@ function RkcAsi() {
         </p>
       </div>
 
-
       {/* Region Tabs with Arrows */}
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '30px', gap: '10px' }}>
         <button onClick={() => scrollTabs('left')} className="scroll-btn">
           <ChevronLeft size={24} />
         </button>
-        
+
         <div className="filters-bar no-scrollbar" ref={tabsRef} style={{ flex: 1, overflowX: 'auto', display: 'flex', gap: '12px', padding: '5px 0', scrollBehavior: 'smooth' }}>
           {regions.map(region => (
-            <button 
+            <button
               key={region}
               onClick={() => setActiveRegion(region)}
               className={`filter-chip ${activeRegion === region ? 'active' : ''}`}
@@ -79,56 +57,17 @@ function RkcAsi() {
         </button>
       </div>
 
-      {loading ? (
-        <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)' }} className="font-mono">
-          // CARICAMENTO CALENDARIO RKC ASI...
+      <div>
+        <h3 style={{ marginBottom: '20px', fontSize: '1.8rem', borderBottom: '2px solid var(--text-main)', paddingBottom: '10px' }}>
+          Tappe in {activeRegion}
+        </h3>
+
+        <div className="empty-state" style={{ marginTop: 0 }}>
+          <Trophy size={40} />
+          <h3>Calendario tappe in arrivo</h3>
+          <p>Le tappe ufficiali RKC ASI di questa regione saranno pubblicate qui appena confermate.</p>
         </div>
-      ) : (
-        <div>
-          <h3 style={{ marginBottom: '20px', fontSize: '1.8rem', borderBottom: '2px solid var(--text-main)', paddingBottom: '10px' }}>
-            Tappe in {activeRegion}
-          </h3>
-          
-          <div className="events-grid">
-            {events.length === 0 ? (
-              <div style={{ padding: '20px 0', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
-                Nessuna tappa RKC ASI confermata al momento per questa regione.
-              </div>
-            ) : (
-              events.map(event => (
-                <div key={event.id} className="card-snappy">
-                  <div className="card-header" style={{ background: 'var(--castrol-red)', color: 'white', borderColor: 'var(--castrol-red)' }}>
-                    <span className="font-mono" style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
-                      {formatEventDate(event.event_date)}
-                    </span>
-                  </div>
-                  
-                  <div className="card-body">
-                    <h3 className="card-title">{event.title}</h3>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
-                        <MapPin size={16} />
-                        <span className="font-mono" style={{ fontSize: '0.9rem' }}>{event.track_name}</span>
-                      </div>
-                    </div>
-                    
-                    <a 
-                      href={event.source_url} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="btn-outline-snappy" 
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'center' }}
-                    >
-                      Dettagli Tappa <ChevronRight size={16} />
-                    </a>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
