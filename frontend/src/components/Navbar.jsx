@@ -7,8 +7,9 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState(null);
   const location = useLocation();
-  // Solo sulla Home la navbar è in versione dark (le altre pagine restano chiare).
-  const isHome = location.pathname === '/';
+  // Navbar dark sulle pagine gia migrate al look "Rally Game Menu" (Home e RKC ASI);
+  // le altre pagine restano chiare finche non vengono ridisegnate.
+  const isDark = location.pathname === '/' || location.pathname === '/rkc-asi';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -27,7 +28,7 @@ function Navbar() {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <nav className={isHome ? 'navbar navbar-home' : 'navbar'}>
+    <nav className={isDark ? 'navbar navbar-home' : 'navbar'}>
       <div className="container nav-content">
         <Link to="/" className="logo-container" onClick={closeMenu}>
           <span className="logo-k">K</span>
