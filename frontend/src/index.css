@@ -8,6 +8,27 @@
   --text-main: #111111;
   --text-muted: #555555;
   --border-color: #e2e8f0;
+
+  /* ============================================================
+     Redesign "Rally Game Menu" — design token dark (§0 brief).
+     AGGIUNTI, non sostitutivi: le pagine ancora chiare usano le
+     variabili castrol/text qui sopra finché non vengono migrate una
+     alla volta (§0ter). La pulizia delle variabili orfane e lo step
+     finale, dopo che tutte le pagine sono passate al dark.
+     ============================================================ */
+  --bg: #08090b;                     /* near-black di fondo */
+  --bg2: #0e1013;                    /* superfici più chiare */
+  --ink: #f4f6f8;                    /* testo principale */
+  --muted: #7d858e;                  /* testo secondario / label */
+  --accent: #e4002b;                 /* ROSSO CORSA — azioni primarie */
+  --accent2: #b4ff2e;                /* VERDE LIME TELEMETRIA — dati/tech */
+  --line: rgba(255, 255, 255, 0.08); /* bordi/griglie */
+  --panel: rgba(255, 255, 255, 0.03);/* pannelli glass */
+
+  /* Famiglie tipografiche del redesign (font caricati in index.html) */
+  --font-display: 'Saira Condensed', 'Outfit', sans-serif; /* titoli/menu rally */
+  --font-body: 'Saira', 'Outfit', sans-serif;              /* testo corrente */
+  --font-hud: 'JetBrains Mono', monospace;                 /* numeri/tempi/label */
 }
 
 * {
@@ -970,4 +991,168 @@ h1, h2, h3, h4 {
   .month-cell-day {
     font-size: 0.95rem;
   }
+}
+
+/* ============================================================
+   REDESIGN "Rally Game Menu" — componenti condivisi (§2 brief).
+   Classi nuove e isolate: non toccano lo stile chiaro esistente,
+   si applicano solo dove i componenti vengono montati.
+   ============================================================ */
+
+/* --- SectionEyebrow: micro-label mono con `//` --- */
+.section-eyebrow {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-hud);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.section-eyebrow-mark {
+  color: var(--accent2);
+  font-weight: 700;
+}
+
+/* --- HudFrame: cornice con bracket ad angolo --- */
+.hud-frame {
+  --hud-color: var(--accent2);
+  position: relative;
+}
+
+.hud-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  border: 2px solid var(--hud-color);
+}
+
+.hud-corner--tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.hud-corner--tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+.hud-corner--bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+.hud-corner--br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+/* --- GameMenu: voci con taglio diagonale, hover/selezione rossa --- */
+.game-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-menu-item {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  background: var(--panel);
+  border-left: 3px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
+  transition: transform 0.18s cubic-bezier(0.8, 0, 0, 1), background-color 0.18s, border-color 0.18s, color 0.18s;
+}
+
+.game-menu-item:hover,
+.game-menu-item:focus-visible,
+.game-menu-item.is-active {
+  outline: none;
+  transform: translateX(10px);
+  background: var(--accent);
+  border-left-color: var(--accent2);
+  color: #fff;
+}
+
+.game-menu-index {
+  font-family: var(--font-hud);
+  font-style: normal;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition: color 0.18s;
+}
+
+.game-menu-item:hover .game-menu-index,
+.game-menu-item:focus-visible .game-menu-index,
+.game-menu-item.is-active .game-menu-index {
+  color: var(--accent2);
+}
+
+.game-menu-label {
+  flex: 1;
+  font-size: 1.5rem;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.game-menu-meta {
+  font-family: var(--font-hud);
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.game-menu-item:hover .game-menu-meta,
+.game-menu-item:focus-visible .game-menu-meta,
+.game-menu-item.is-active .game-menu-meta {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* --- PageBackground: video-solo-home vs foto-parallasse --- */
+.page-bg {
+  position: relative;
+  isolation: isolate;
+}
+
+.page-bg-media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  will-change: transform;
+}
+
+.page-bg-video,
+.page-bg-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.page-bg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 9, 11, calc(var(--overlay-opacity, 0.6) * 0.7)),
+    rgba(8, 9, 11, var(--overlay-opacity, 0.6))
+  );
+  backdrop-filter: blur(1px);
+}
+
+.page-bg-content {
+  position: relative;
+  z-index: 0;
+}
+
+/* Rispetta prefers-reduced-motion: niente parallasse o transizioni in entrata. */
+@media (prefers-reduced-motion: reduce) {
+  .page-bg-media { will-change: auto; }
+  .game-menu-item { transition: background-color 0.18s, color 0.18s; }
+  .game-menu-item:hover,
+  .game-menu-item:focus-visible,
+  .game-menu-item.is-active { transform: none; }
 }
