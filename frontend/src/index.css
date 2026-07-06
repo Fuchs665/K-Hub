@@ -274,6 +274,22 @@ h1, h2, h3, h4 {
   border-color: var(--text-main);
 }
 
+/* Nav Menu (desktop: inline row — mobile: dropdown sotto la navbar) */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-burger {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-main);
+  padding: 4px;
+}
+
 /* Nav Links */
 .nav-link {
   color: var(--text-muted);
@@ -362,31 +378,96 @@ h1, h2, h3, h4 {
   h1 {
     font-size: 2.2rem !important;
   }
-  
-  .nav-content {
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 0;
-  }
-  
+
   .navbar {
-    height: auto;
-    position: relative; /* Change from fixed to relative to avoid overlap */
+    height: 64px;
   }
-  
+
+  .logo-container {
+    font-size: 1.6rem;
+  }
+
+  .nav-burger {
+    display: flex;
+  }
+
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 20px;
+    background: var(--bg-card);
+    border-bottom: 2px solid var(--text-main);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .nav-menu.open {
+    display: flex;
+  }
+
   .main-content {
-    margin-top: 40px;
+    margin-top: 88px;
   }
 
   .nav-link {
-    font-size: 0.8rem;
-    padding: 4px 8px;
+    font-size: 1rem;
   }
-  
+
   .scroll-btn {
     width: 30px;
     height: 30px;
   }
+}
+
+/* Event Card internals */
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+/* Skeleton loading state */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--text-main);
+}
+
+.skeleton-line {
+  display: block;
+  height: 14px;
+  background: var(--border-color);
+  animation: skeletonPulse 1.2s ease-in-out infinite;
 }
 
 /* Info Boxes for Cards */

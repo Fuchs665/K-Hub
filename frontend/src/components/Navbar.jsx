@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState(null);
-  const location = useLocation();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -32,27 +31,18 @@ function Navbar() {
           <span className="logo-hub">Hub</span>
         </Link>
 
-        {/* Mobile menu button */}
-        <div style={{ display: 'flex' }} className="md-hidden">
-          <button onClick={() => setIsOpen(!isOpen)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-            {isOpen ? <X size={28} color="var(--text-main)" /> : <Menu size={28} color="var(--text-main)" />}
-          </button>
-        </div>
+        {/* Hamburger — visibile solo su mobile via CSS */}
+        <button
+          className="nav-burger"
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? 'Chiudi menu' : 'Apri menu'}
+          aria-expanded={isOpen}
+        >
+          {isOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
 
-        {/* Desktop & Mobile Menu */}
-        <div style={{
-          display: isOpen ? 'flex' : 'none',
-          flexDirection: 'column',
-          position: 'absolute',
-          top: '72px',
-          left: 0,
-          right: 0,
-          background: 'rgba(255, 255, 255, 0.98)',
-          padding: '20px',
-          borderBottom: '2px solid var(--text-main)',
-          gap: '20px',
-          alignItems: 'center'
-        }} className="md-flex md-static md-row md-bg-transparent md-border-none md-p-0 md-gap-4">
+        {/* Desktop: riga inline — Mobile: dropdown sotto la navbar */}
+        <div className={isOpen ? 'nav-menu open' : 'nav-menu'}>
           <NavLink to="/calendar" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>Calendario</NavLink>
           <NavLink to="/leaderboard" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>Classifica</NavLink>
           <NavLink to="/tracks" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>Le Piste</NavLink>
