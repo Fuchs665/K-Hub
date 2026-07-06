@@ -4,22 +4,33 @@ import { useNavigate } from 'react-router-dom';
 /**
  * GameMenu — menu verticale "da videogioco rally": righe con taglio diagonale
  * (clip-path) che scivolano a destra e si illuminano di rosso su hover/selezione.
- * Navigazione da tastiera: ↑/↓ per muoversi, Enter/Spazio per aprire la voce.
+ * Navigazione da tastiera (quando il menu ha il focus): ↑/↓ per muoversi,
+ * Enter/Spazio per aprire la voce. Il click naviga sempre alla route.
+ *
+ * L'indice attivo cambia su hover/focus/frecce e viene notificato via
+ * onActiveChange: la Home lo usa per sincronizzare il pannello contestuale
+ * a destra (preview on hover, go on click).
  *
  * Props:
  *  - items: [{ label, to, meta? }]  voci del menu (meta = micro-label mono opzionale).
+ *  - onActiveChange: (index) => void  callback quando cambia la voce evidenziata.
  *  - className: classi extra sul <nav>.
  *  - ariaLabel: etichetta accessibile del menu (default 'Menu principale').
  */
-function GameMenu({ items = [], className = '', ariaLabel = 'Menu principale' }) {
+function GameMenu({ items = [], onActiveChange, className = '', ariaLabel = 'Menu principale' }) {
   const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(0);
   const itemRefs = useRef([]);
 
+  const setActive = (i) => {
+    setActiveIndex(i);
+    onActiveChange?.(i);
+  };
+
   const focusItem = (i) => {
     if (items.length === 0) return;
     const next = (i + items.length) % items.length;
-    setActiveIndex(next);
+    setActive(next);
     itemRefs.current[next]?.focus();
   };
 
@@ -51,8 +62,8 @@ function GameMenu({ items = [], className = '', ariaLabel = 'Menu principale' })
           type="button"
           ref={(el) => (itemRefs.current[i] = el)}
           className={`game-menu-item ${activeIndex === i ? 'is-active' : ''}`.trim()}
-          onMouseEnter={() => setActiveIndex(i)}
-          onFocus={() => setActiveIndex(i)}
+          onMouseEnter={() => setActive(i)}
+          onFocus={() => setActive(i)}
           onClick={() => navigate(item.to)}
           onKeyDown={(e) => handleKeyDown(e, i)}
         >
@@ -61,6 +72,7 @@ function GameMenu({ items = [], className = '', ariaLabel = 'Menu principale' })
           </span>
           <span className="game-menu-label">{item.label}</span>
           {item.meta && <span className="game-menu-meta">{item.meta}</span>}
+          <span className="game-menu-arrow" aria-hidden="true">▸</span>
         </button>
       ))}
     </nav>

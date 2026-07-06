@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState(null);
+  const location = useLocation();
+  // Solo sulla Home la navbar è in versione dark (le altre pagine restano chiare).
+  const isHome = location.pathname === '/';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -24,7 +27,7 @@ function Navbar() {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <nav className="navbar">
+    <nav className={isHome ? 'navbar navbar-home' : 'navbar'}>
       <div className="container nav-content">
         <Link to="/" className="logo-container" onClick={closeMenu}>
           <span className="logo-k">K</span>

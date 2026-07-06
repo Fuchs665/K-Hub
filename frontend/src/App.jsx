@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Calendar from './pages/Calendar';
@@ -14,40 +14,38 @@ import GuidaRental from './pages/GuidaRental';
 import './index.css';
 
 /**
- * Wrapper di transizione route: fade/slide leggero (solo transform+opacity).
- * Con prefers-reduced-motion la transizione è disattivata (render immediato).
+ * Transizioni di route con Framer Motion — solo animazione d'ENTRATA.
+ * Il motion.div è keyato sul pathname: a ogni cambio route React lo rimonta e
+ * l'animazione initial→animate riparte (fade/slide leggero).
+ *
+ * Niente AnimatePresence/exit di proposito: sotto React 19 StrictMode
+ * l'exit con mode="wait" può non completare e bloccare il cambio pagina.
+ * L'entrata è sufficiente per il "fade/slide tra pagine" del brief ed è
+ * a prova di deadlock. Con prefers-reduced-motion l'entrata è neutra.
  */
-function PageTransition({ children }) {
-  const reduceMotion = useReducedMotion();
-  if (reduceMotion) return children;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 function AnimatedRoutes() {
   const location = useLocation();
+  const reduceMotion = useReducedMotion();
+
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><Home /></PageTransition>} />
-        <Route path="/calendar" element={<PageTransition><Calendar /></PageTransition>} />
-        <Route path="/tracks" element={<PageTransition><TracksDirectory /></PageTransition>} />
-        <Route path="/rkc-asi" element={<PageTransition><RkcAsi /></PageTransition>} />
-        <Route path="/organizer" element={<PageTransition><OrganizerDashboard /></PageTransition>} />
-        <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
-        <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-        <Route path="/event/:id" element={<PageTransition><EventDetails /></PageTransition>} />
-        <Route path="/guida-rental" element={<PageTransition><GuidaRental /></PageTransition>} />
+    <motion.div
+      key={location.pathname}
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <Routes location={location}>
+        <Route path="/" element={<Home />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/tracks" element={<TracksDirectory />} />
+        <Route path="/rkc-asi" element={<RkcAsi />} />
+        <Route path="/organizer" element={<OrganizerDashboard />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/event/:id" element={<EventDetails />} />
+        <Route path="/guida-rental" element={<GuidaRental />} />
       </Routes>
-    </AnimatePresence>
+    </motion.div>
   );
 }
 

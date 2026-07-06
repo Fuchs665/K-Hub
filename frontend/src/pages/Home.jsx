@@ -1,118 +1,199 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { MapPin } from 'lucide-react';
 import { getUpcomingEvents, getUpcomingEventsCount } from '../lib/eventsRepository';
 import { getTracksCount } from '../lib/tracksRepository';
-import { Link } from 'react-router-dom';
-import EventCard, { EventCardSkeleton } from '../components/EventCard';
+import GameMenu from '../components/GameMenu';
+import HudFrame from '../components/HudFrame';
+import SectionEyebrow from '../components/SectionEyebrow';
+import { formatEventDate } from '../lib/format';
+
+// Voci del command center → route reali (le 5 sezioni principali del mockup).
+const MENU_ITEMS = [
+  { label: 'Calendario Gare', to: '/calendar' },
+  { label: 'RKC ASI', to: '/rkc-asi' },
+  { label: "Piste d'Italia", to: '/tracks' },
+  { label: 'Dashboard Pilota', to: '/dashboard' },
+  { label: 'Area Organizzatori', to: '/organizer' },
+];
+
+// Classifica MOCK: stessa forma dei futuri record (pos/pilota/team/punti) così
+// lo switch ai dati reali da race_results sarà indolore (brief §4).
+const MOCK_STANDINGS = [
+  { pos: 1, driver: 'M. Rossi', team: 'SCUDERIA CREMONA', points: 218 },
+  { pos: 2, driver: 'L. Bianchi', team: 'KART TEAM LAZIO', points: 205 },
+  { pos: 3, driver: 'D. Furchia', team: 'RKC MILANO', points: 197 },
+  { pos: 4, driver: 'A. Verdi', team: 'SODI RACING', points: 184 },
+];
 
 function Home() {
+  const [activeIndex, setActiveIndex] = useState(0);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ events: null, tracks: null });
 
   useEffect(() => {
-    fetchEvents();
-    fetchStats();
+    (async () => {
+      try {
+        const [events, count, tracks] = await Promise.all([
+          getUpcomingEvents(3),
+          getUpcomingEventsCount(),
+          getTracksCount(),
+        ]);
+        setUpcomingEvents(events);
+        setStats({ events: count, tracks });
+      } catch (error) {
+        console.error('Error loading home data:', error);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  async function fetchEvents() {
-    try {
-      setLoading(true);
-      const data = await getUpcomingEvents(3);
-      setUpcomingEvents(data);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const evTxt = stats.events != null ? stats.events : '—';
+  const trTxt = stats.tracks != null ? stats.tracks : '—';
 
-  async function fetchStats() {
-    try {
-      const [events, tracks] = await Promise.all([getUpcomingEventsCount(), getTracksCount()]);
-      setStats({ events, tracks });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  }
+  // Pannelli contestuali (uno per voce di menu). L'eyebrow del calendario usa
+  // i conteggi reali; il board RKC usa MOCK_STANDINGS.
+  const panels = [
+    {
+      eyebrow: `${evTxt} eventi · ${trTxt} piste`,
+      title: <>Il calendario<br />nazionale</>,
+      body: 'Tutte le gare rental in un unico posto. Filtra per pista, formato e tipo di kart. Un click per iscriverti, uno per aggiungere al tuo calendario.',
+    },
+    {
+      eyebrow: 'Rental Kart Championship — ASI',
+      title: <>Classifica<br />campionato</>,
+      body: 'Il board interattivo del campionato: standing live, best lap e distacchi, aggiornati gara dopo gara.',
+      board: true,
+    },
+    {
+      eyebrow: 'Directory circuiti',
+      title: <>Le piste<br />d'Italia</>,
+      body: 'Mappa interattiva dei kartodromi: regolamenti, layout, tipi di kart e link diretti. Scegli dove correre.',
+    },
+    {
+      eyebrow: 'Telemetria personale · powered by Racesense',
+      title: <>Il tuo<br />profilo pilota</>,
+      body: (
+        <>
+          Gare disputate, podi, best lap assoluto. In futuro con upload dei tempi sul giro e dati
+          telemetria: <span className="khub-lap">1:02.418</span> — il tuo miglior giro, tracciato per sempre.
+        </>
+      ),
+    },
+    {
+      eyebrow: 'Per gli organizzatori',
+      title: <>Pubblica<br />il tuo evento</>,
+      body: "Sei un kartodromo o un organizzatore? Inserisci le tue gare in 60 secondi e raggiungi tutti i piloti d'Italia. Gratis.",
+    },
+  ];
 
   return (
-    <div className="container main-content">
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '60px', marginTop: '40px' }}>
-        <h1 style={{ fontSize: '4rem', lineHeight: '1', marginBottom: '16px' }}>K-HUB ITALIA</h1>
-        <div className="checker-strip" style={{ marginBottom: '24px' }} />
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.5rem', maxWidth: '600px', marginBottom: '30px' }}>
-          Il portale definitivo per i piloti di Rental Kart. Trova gare, campionati e piste in tutta Italia.
-        </p>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Link to="/calendar" className="btn-snappy">
-            TROVA UNA GARA
-          </Link>
-          <Link to="/tracks" className="btn-outline-snappy" style={{ padding: '12px 24px', fontSize: '1rem' }}>
-            ESPLORA LE PISTE
-          </Link>
+    <div className="khub-home">
+      {/* ---------- HERO: command center ---------- */}
+      <HudFrame className="khub-hero" style={{ '--hud-size': '34px', '--hud-inset': '22px' }}>
+        {/* sfondo animato */}
+        <div className="khub-bg" aria-hidden="true">
+          <div className="khub-bg-grid" />
+          <div className="khub-bg-speed" />
+          <div className="khub-bg-grain" />
         </div>
 
-        <div className="hero-stats">
-          {stats.events !== null && stats.events > 0 && (
-            <div className="stat-chip">
-              <span className="stat-value">{stats.events}</span>
-              <span className="stat-label">Gare in calendario</span>
-            </div>
-          )}
-          {stats.tracks !== null && stats.tracks > 0 && (
-            <div className="stat-chip">
-              <span className="stat-value">{stats.tracks}</span>
-              <span className="stat-label">Piste censite</span>
-            </div>
-          )}
-          <div className="stat-chip">
-            <span className="stat-value">4</span>
-            <span className="stat-label">Fonti monitorate</span>
+        {/* striscia HUD in alto */}
+        <div className="khub-hud-top" aria-hidden="true">
+          <span>SYS // K-HUB_OS v0.1 · ITALIA</span>
+          <span className="khub-hud-live">● <span className="khub-blink">LIVE</span> · SEASON 2026</span>
+        </div>
+
+        {/* colonna sinistra: brand + menu */}
+        <div className="khub-col-left">
+          <div className="khub-brand">
+            <div className="khub-brand-k">K-HUB</div>
+            <div className="khub-brand-sub">Rental Karting · Command Center</div>
           </div>
+          <GameMenu items={MENU_ITEMS} onActiveChange={setActiveIndex} className="khub-menu" />
         </div>
-      </div>
 
-      {/* Banner Guida Neofiti */}
-      <div style={{ background: 'var(--bg-card)', border: '2px solid var(--text-main)', borderBottom: '6px solid var(--castrol-red)', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Prima volta al rental?</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Scopri format, glossario e come iscriverti alla tua prima gara.</div>
-        </div>
-        <Link to="/guida-rental" className="btn-outline-snappy" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
-          LEGGI LA GUIDA
-        </Link>
-      </div>
-
-      {/* Banner RKC ASI */}
-      <div style={{ background: 'var(--text-main)', color: 'white', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '16px', borderRadius: '4px' }}>
-        <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Scopri il percorso per qualificarsi alle finali nazionali RKC ASI</div>
-        <Link to="/rkc-asi" className="btn-snappy" style={{ padding: '10px 20px', fontSize: '0.9rem', background: 'var(--castrol-red)', borderColor: 'var(--castrol-red)', color: 'white' }}>
-          VAI ALLA SEZIONE
-        </Link>
-      </div>
-
-      <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Prossimi Eventi</h2>
-        <Link to="/calendar" style={{ color: 'var(--castrol-red)', fontWeight: 'bold', textDecoration: 'none' }}>Vedi tutti →</Link>
-      </div>
-
-      {loading ? (
-        <div className="events-grid">
-          <EventCardSkeleton />
-          <EventCardSkeleton />
-          <EventCardSkeleton />
-        </div>
-      ) : upcomingEvents.length === 0 ? (
-        <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)' }} className="font-mono">
-          // NESSUN EVENTO IN ARRIVO — TORNA A TROVARCI PRESTO
-        </div>
-      ) : (
-        <div className="events-grid">
-          {upcomingEvents.map(event => (
-            <EventCard key={event.id} event={event} />
+        {/* colonna destra: pannello contestuale */}
+        <div className="khub-panel-wrap">
+          {panels.map((p, i) => (
+            <section key={p.eyebrow} className={`khub-panel ${activeIndex === i ? 'show' : ''}`.trim()}>
+              <div className="khub-card">
+                <SectionEyebrow className="khub-eyebrow">{p.eyebrow}</SectionEyebrow>
+                <h2 className="khub-card-title">{p.title}</h2>
+                <p className="khub-card-body">{p.body}</p>
+                {p.board && (
+                  <div className="khub-board" key={activeIndex}>
+                    {MOCK_STANDINGS.map((s) => (
+                      <div className="khub-row" key={s.pos}>
+                        <span className="khub-pos">{s.pos}</span>
+                        <span className="khub-drv">
+                          {s.driver}
+                          <small>{s.team}</small>
+                        </span>
+                        <span className="khub-pts">
+                          {s.points}
+                          <span>PTS</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
           ))}
         </div>
-      )}
+
+        {/* hint navigazione */}
+        <div className="khub-hint" aria-hidden="true">
+          NAV <b>↑</b> <b>↓</b> · SELECT <b>ENTER</b> — o passa il mouse
+        </div>
+      </HudFrame>
+
+      {/* ---------- PROSSIMI EVENTI (dark) ---------- */}
+      <section className="khub-events container">
+        <div className="khub-events-head">
+          <h2>Prossimi Eventi</h2>
+          <Link to="/calendar">Vedi tutti →</Link>
+        </div>
+
+        {loading ? (
+          <div className="khub-events-grid">
+            {[0, 1, 2].map((i) => (
+              <div className="khub-event-card" key={i} aria-hidden="true">
+                <span className="khub-skel" style={{ width: '40%' }} />
+                <span className="khub-skel" style={{ width: '85%', height: '22px' }} />
+                <span className="khub-skel" style={{ width: '55%' }} />
+              </div>
+            ))}
+          </div>
+        ) : upcomingEvents.length === 0 ? (
+          <div className="khub-events-empty">// NESSUN EVENTO IN ARRIVO — TORNA A TROVARCI PRESTO</div>
+        ) : (
+          <div className="khub-events-grid">
+            {upcomingEvents.map((ev) => (
+              <Link to={`/event/${ev.id}`} className="khub-event-card" key={ev.id}>
+                <div className="khub-event-top">
+                  <span
+                    className={`khub-event-tag ${ev.event_type?.toLowerCase() === 'sprint' ? 'is-sprint' : 'is-endurance'}`}
+                  >
+                    {ev.event_type || 'GARA'}
+                  </span>
+                  <span className="khub-event-date">{formatEventDate(ev.event_date)}</span>
+                </div>
+                <h3 className="khub-event-title">{ev.title}</h3>
+                {ev.track_name && (
+                  <div className="khub-event-track">
+                    <MapPin size={14} /> {ev.track_name}
+                  </div>
+                )}
+                <span className="khub-event-cta">Classifica &amp; tempi ▸</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
