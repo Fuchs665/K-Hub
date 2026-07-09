@@ -9,7 +9,7 @@ function Navbar() {
   const location = useLocation();
   // Navbar dark sulle pagine gia migrate al look "Rally Game Menu";
   // le altre pagine restano chiare finche non vengono ridisegnate.
-  const isDark = ['/', '/rkc-asi', '/calendar', '/tracks'].includes(location.pathname);
+  const isDark = ['/', '/rkc-asi', '/calendar', '/tracks', '/dashboard'].includes(location.pathname);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

@@ -1987,16 +1987,20 @@ h1, h2, h3, h4 {
   box-shadow: none;
   transform: none;
 }
-.cal-page .btn-snappy {
+.cal-page .btn-snappy,
+.dsh-page .btn-snappy {
   background-image: linear-gradient(to right, var(--accent) 50%, #171a1f 50%);
 }
-.cal-page .empty-state {
+.cal-page .empty-state,
+.dsh-page .empty-state {
   background: var(--bg2);
   border-color: var(--muted);
   color: var(--ink);
 }
-.cal-page .empty-state svg { color: var(--accent); }
-.cal-page .empty-state p { color: var(--muted); }
+.cal-page .empty-state svg,
+.dsh-page .empty-state svg { color: var(--accent); }
+.cal-page .empty-state p,
+.dsh-page .empty-state p { color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) {
   .cal-event-card { animation: none; opacity: 1; transform: none; }
@@ -2044,4 +2048,165 @@ h1, h2, h3, h4 {
 }
 .trk-site-link:hover {
   color: var(--ink);
+}
+
+/* ============================================================
+   DASHBOARD PILOTA — migrazione dark (sezione 5 brief).
+   Riusa shell rkc-page, hero rkc-, tile rkc-tile per i KPI e la
+   tipografia rkc-pos / rkc-drv / rkc-val nello storico gare.
+   Include il blocco Telemetria placeholder per il futuro import
+   Racesense (campo source nei lap_times).
+   ============================================================ */
+.dsh-hero {
+  min-height: 28vh;
+  padding-bottom: 44px;
+}
+
+/* KPI: griglia di tile HUD dentro cornice */
+.dsh-kpi-frame {
+  padding: 18px;
+  margin-bottom: 40px;
+}
+
+.dsh-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.dsh-kpi-grid .rkc-tile {
+  padding: 20px;
+  text-align: center;
+}
+.dsh-kpi-grid .rkc-tile b { font-size: 2rem; }
+.dsh-kpi-grid .rkc-tile svg {
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.dsh-kpi-grid .rkc-tile.is-podium b,
+.dsh-kpi-grid .rkc-tile.is-podium svg,
+.dsh-kpi-grid .rkc-tile.is-lap svg {
+  color: var(--accent2);
+}
+
+/* Pannello trend punti: barre CSS, podio in lime */
+.dsh-panel {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  padding: 20px;
+  margin-bottom: 40px;
+}
+
+.dsh-chart {
+  display: flex;
+  align-items: flex-end;
+  height: 120px;
+  gap: 8px;
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 10px;
+  margin-top: 16px;
+}
+
+.dsh-chart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 100%;
+}
+
+.dsh-chart-val {
+  font-family: var(--font-hud);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.dsh-bar {
+  width: 100%;
+  background: var(--accent);
+  transition: height 0.3s ease;
+}
+.dsh-bar.is-podium { background: var(--accent2); }
+
+/* Blocco telemetria: placeholder per il futuro import Racesense */
+.dsh-telemetry {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 20px;
+  margin-bottom: 40px;
+}
+
+.dsh-telemetry-text {
+  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.dsh-telemetry-sources {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dsh-source {
+  font-family: var(--font-hud);
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.dsh-source.is-live {
+  color: var(--accent2);
+  border-color: var(--accent2);
+}
+
+/* Storico gare: righe con taglio diagonale in cascata */
+.dsh-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dsh-row {
+  display: grid;
+  grid-template-columns: 46px 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  color: var(--ink);
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: khubEnter 0.45s forwards;
+  transition: background 0.16s, border-color 0.16s;
+}
+.dsh-row:nth-child(1) { animation-delay: 0.04s; }
+.dsh-row:nth-child(2) { animation-delay: 0.10s; }
+.dsh-row:nth-child(3) { animation-delay: 0.16s; }
+.dsh-row:nth-child(4) { animation-delay: 0.22s; }
+.dsh-row:nth-child(5) { animation-delay: 0.28s; }
+.dsh-row:nth-child(6) { animation-delay: 0.34s; }
+.dsh-row:nth-child(7) { animation-delay: 0.40s; }
+.dsh-row:nth-child(8) { animation-delay: 0.46s; }
+.dsh-row:hover { background: #12151a; }
+.dsh-row .rkc-pos.is-podium { color: var(--accent2); }
+
+@media (max-width: 700px) {
+  .dsh-row { grid-template-columns: 40px 1fr auto; }
+  .dsh-row .cal-btn { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsh-row { animation: none; opacity: 1; transform: none; }
+  .dsh-bar { transition: none; }
 }
