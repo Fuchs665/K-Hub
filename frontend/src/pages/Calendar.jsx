@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Filter, Flag, X, List, CalendarDays, SlidersHorizontal, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Flag, X, List, CalendarDays, SlidersHorizontal, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getEvents } from '../lib/eventsRepository';
 import { ITALIAN_REGIONS } from '../lib/constants';
 import { parseEventDate, formatEventDate } from '../lib/format';
 import EventCard, { EventCardSkeleton } from '../components/EventCard';
+import HudFrame from '../components/HudFrame';
+import SectionEyebrow from '../components/SectionEyebrow';
 
 const PAGE_SIZE = 20;
 const MONTH_FETCH_SIZE = 1000; // vista mese: prende tutti gli eventi filtrati, raggruppati client-side per giorno
@@ -245,14 +247,27 @@ function Calendar() {
   };
 
   return (
-    <div className="container main-content">
-      <div style={{ marginBottom: '30px' }}>
-        <h1 style={{ fontSize: '3rem', lineHeight: '1', marginBottom: '8px' }}>Calendario Gare</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>
-          Trova le tue prossime sfide. Usa i filtri per affinare la ricerca.
-        </p>
-      </div>
+    <div className="rkc-page cal-page">
+      {/* ---------- HERO: header calendario ---------- */}
+      <HudFrame className="rkc-hero cal-hero" style={{ '--hud-size': '30px', '--hud-inset': '20px' }}>
+        <div className="khub-bg" aria-hidden="true">
+          <div className="khub-bg-grid" />
+          <div className="khub-bg-speed" />
+          <div className="khub-bg-grain" />
+        </div>
 
+        <div className="rkc-hero-inner">
+          <SectionEyebrow className="rkc-hero-eyebrow">
+            Season 2026 · Tutte le gare in Italia
+          </SectionEyebrow>
+          <h1 className="rkc-title">Calendario <em>Gare</em></h1>
+          <p className="rkc-subtitle">
+            Trova le tue prossime sfide. Usa i filtri per affinare la ricerca.
+          </p>
+        </div>
+      </HudFrame>
+
+      <section className="rkc-section container">
       {/* Barra filtri principale + toggle vista */}
       <div className="calendar-toolbar">
         <div className="filters-bar no-scrollbar" style={{ flex: '1 1 260px' }}>
@@ -276,11 +291,11 @@ function Calendar() {
           <ChevronDown size={14} style={{ transform: showAdvanced ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
         </button>
 
-        <div className="view-toggle">
-          <button className={`view-toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>
+        <div className="rkc-toggle" role="tablist" aria-label="Vista calendario">
+          <button role="tab" aria-selected={view === 'list'} className={`rkc-toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>
             <List size={15} /> Lista
           </button>
-          <button className={`view-toggle-btn ${view === 'month' ? 'active' : ''}`} onClick={() => setView('month')}>
+          <button role="tab" aria-selected={view === 'month'} className={`rkc-toggle-btn ${view === 'month' ? 'active' : ''}`} onClick={() => setView('month')}>
             <CalendarDays size={15} /> Mese
           </button>
         </div>
@@ -288,42 +303,41 @@ function Calendar() {
 
       {showAdvanced && (
         <div className="advanced-filters-panel">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', marginBottom: '4px' }}>
-            <Filter size={18} />
-            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Filtri Avanzati</h3>
-          </div>
+          <SectionEyebrow as="div" className="rkc-section-eyebrow cal-panel-eyebrow">
+            Filtri avanzati
+          </SectionEyebrow>
 
           <div className="filter-group" style={{ flex: '1 1 200px' }}>
-            <label htmlFor="filter-kart" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Tipo Kart</label>
+            <label htmlFor="filter-kart" className="cal-filter-label">Tipo Kart</label>
             <select
               id="filter-kart"
+              className="cal-select"
               value={filterKart}
               onChange={handleFilterChange(setFilterKart)}
-              style={{ width: '100%', padding: '10px', border: '2px solid var(--text-main)', background: 'white', fontFamily: 'inherit', fontWeight: '600' }}
             >
               {kartTypes.map(kart => <option key={kart} value={kart}>{kart}</option>)}
             </select>
           </div>
 
           <div className="filter-group" style={{ flex: '1 1 200px' }}>
-            <label htmlFor="filter-format" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Formato</label>
+            <label htmlFor="filter-format" className="cal-filter-label">Formato</label>
             <select
               id="filter-format"
+              className="cal-select"
               value={filterFormat}
               onChange={handleFilterChange(setFilterFormat)}
-              style={{ width: '100%', padding: '10px', border: '2px solid var(--text-main)', background: 'white', fontFamily: 'inherit', fontWeight: '600' }}
             >
               {formats.map(fmt => <option key={fmt} value={fmt}>{fmt}</option>)}
             </select>
           </div>
 
           <div className="filter-group" style={{ flex: '1 1 200px' }}>
-            <label htmlFor="filter-region" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase' }}>Regione</label>
+            <label htmlFor="filter-region" className="cal-filter-label">Regione</label>
             <select
               id="filter-region"
+              className="cal-select"
               value={filterRegion}
               onChange={handleFilterChange(setFilterRegion)}
-              style={{ width: '100%', padding: '10px', border: '2px solid var(--text-main)', background: 'white', fontFamily: 'inherit', fontWeight: '600' }}
             >
               {regions.map(reg => <option key={reg} value={reg}>{reg}</option>)}
             </select>
@@ -353,14 +367,12 @@ function Calendar() {
             {Array.from({ length: 6 }, (_, i) => <EventCardSkeleton key={i} />)}
           </div>
         ) : errorMsg ? (
-          <div style={{ padding: '40px 0', color: 'var(--castrol-red)' }}>{errorMsg}</div>
+          <div className="rkc-error">{errorMsg}</div>
         ) : (
           <>
-            <div style={{ marginBottom: '8px' }}>
-              <span className="font-mono" style={{ fontWeight: 'bold' }}>
-                {total} {total === 1 ? 'GARA TROVATA' : 'GARE TROVATE'}
-              </span>
-            </div>
+            <SectionEyebrow as="div" className="rkc-section-eyebrow">
+              {total} {total === 1 ? 'gara trovata' : 'gare trovate'}
+            </SectionEyebrow>
 
             {events.length === 0 ? (
               <div className="empty-state">
@@ -410,11 +422,11 @@ function Calendar() {
       ) : (
         <>
           <div className="month-nav">
-            <button className="scroll-btn" onClick={goToPrevMonth} aria-label="Mese precedente">
+            <button className="rkc-scroll-btn" onClick={goToPrevMonth} aria-label="Mese precedente">
               <ChevronLeft size={20} />
             </button>
             <h2 className="month-nav-label">{monthLabel}</h2>
-            <button className="scroll-btn" onClick={goToNextMonth} aria-label="Mese successivo">
+            <button className="rkc-scroll-btn" onClick={goToNextMonth} aria-label="Mese successivo">
               <ChevronRight size={20} />
             </button>
             <button className="btn-outline-snappy" style={{ fontSize: '0.75rem', padding: '6px 12px' }} onClick={goToCurrentMonth}>
@@ -423,11 +435,9 @@ function Calendar() {
           </div>
 
           {monthLoading ? (
-            <div className="font-mono" style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-              // CARICAMENTO CALENDARIO...
-            </div>
+            <div className="rkc-empty">// CARICAMENTO CALENDARIO...</div>
           ) : monthErrorMsg ? (
-            <div style={{ padding: '40px 0', color: 'var(--castrol-red)' }}>{monthErrorMsg}</div>
+            <div className="rkc-error">{monthErrorMsg}</div>
           ) : (
             <>
               <div className="month-grid">
@@ -470,10 +480,10 @@ function Calendar() {
 
               {selectedDay && (
                 <div className="month-selected-panel">
-                  <div className="tracks-list-head">
-                    <h2 style={{ fontSize: '1.3rem', margin: 0 }}>{formatEventDate(selectedDay)}</h2>
-                    <button className="btn-outline-snappy reset-region-btn" onClick={() => setSelectedDay(null)}>
-                      <X size={16} /> Chiudi
+                  <div className="rkc-section-head">
+                    <h2 className="rkc-section-title" style={{ fontSize: '1.4rem', margin: 0 }}>{formatEventDate(selectedDay)}</h2>
+                    <button className="rkc-tab active" onClick={() => setSelectedDay(null)}>
+                      <X size={13} style={{ verticalAlign: '-2px', marginRight: '4px' }} /> Chiudi
                     </button>
                   </div>
                   <div className="events-grid">
@@ -487,6 +497,7 @@ function Calendar() {
           )}
         </>
       )}
+      </section>
     </div>
   );
 }

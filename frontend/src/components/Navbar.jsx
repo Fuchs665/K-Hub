@@ -7,9 +7,9 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState(null);
   const location = useLocation();
-  // Navbar dark sulle pagine gia migrate al look "Rally Game Menu" (Home e RKC ASI);
+  // Navbar dark sulle pagine gia migrate al look "Rally Game Menu";
   // le altre pagine restano chiare finche non vengono ridisegnate.
-  const isDark = location.pathname === '/' || location.pathname === '/rkc-asi';
+  const isDark = ['/', '/rkc-asi', '/calendar'].includes(location.pathname);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
