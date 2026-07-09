@@ -636,10 +636,10 @@ h1, h2, h3, h4 {
   display: block;
 }
 
-/* Regioni della mappa */
+/* Regioni della mappa — token dark: rosso = con piste, lime = selezionata */
 .italy-region {
-  fill: #cbd3dc;
-  stroke: #ffffff;
+  fill: #1a1e24;
+  stroke: var(--bg2);
   stroke-width: 0.7;
   stroke-linejoin: round;
   transition: fill 0.15s, fill-opacity 0.15s;
@@ -650,7 +650,7 @@ h1, h2, h3, h4 {
 }
 
 .italy-region.has-tracks {
-  fill: var(--castrol-red);
+  fill: var(--accent);
   fill-opacity: 0.82;
   cursor: pointer;
 }
@@ -664,16 +664,16 @@ h1, h2, h3, h4 {
 }
 
 .italy-region.has-tracks:focus-visible {
-  stroke: var(--text-main);
+  stroke: var(--ink);
   stroke-width: 1.6;
 }
 
 .italy-region.selected,
 .italy-region.selected:hover {
-  fill: var(--text-main);
+  fill: var(--accent2);
   fill-opacity: 1;
-  stroke: var(--castrol-red);
-  stroke-width: 1.6;
+  stroke: var(--bg);
+  stroke-width: 1.2;
 }
 
 /* Legenda */
@@ -683,29 +683,30 @@ h1, h2, h3, h4 {
   gap: 16px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--line);
 }
 
 .legend-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-family: var(--font-hud);
+  font-size: 0.68rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
+  letter-spacing: 1px;
+  color: var(--muted);
 }
 
 .legend-swatch {
   width: 14px;
   height: 14px;
-  border: 1.5px solid var(--text-main);
+  border: 1px solid var(--line);
   flex-shrink: 0;
 }
 
-.swatch-active { background: var(--castrol-red); }
-.swatch-empty { background: #cbd3dc; }
+.swatch-active { background: var(--accent); }
+.swatch-empty { background: #1a1e24; }
 
 /* Testata lista */
 .tracks-list-head {
@@ -715,14 +716,6 @@ h1, h2, h3, h4 {
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 20px;
-}
-
-.reset-region-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 0.85rem;
 }
 
 .tracks-grid {
@@ -2008,4 +2001,47 @@ h1, h2, h3, h4 {
 @media (prefers-reduced-motion: reduce) {
   .cal-event-card { animation: none; opacity: 1; transform: none; }
   .month-cell.has-events:hover { transform: none; }
+}
+
+/* ============================================================
+   LE PISTE — migrazione dark (sezione 5 brief).
+   Riusa la shell .rkc-page, la hero rkc- e la card dark del
+   calendario (cal-event-card come base condivisa, da rinominare
+   in una classe neutra nel commit di pulizia finale). Le classi
+   della mappa (italy-region, legenda) sono migrate ai token nei
+   loro blocchi originali. La card e pensata per ospitare in
+   futuro una foto del circuito con overlay senza ristrutturare.
+   ============================================================ */
+.trk-hero {
+  min-height: 34vh;
+  padding-bottom: 44px;
+}
+
+.trk-map-panel {
+  padding: 16px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+}
+
+.trk-count {
+  margin-left: 10px;
+  font-family: var(--font-hud);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--accent2);
+}
+
+.trk-desc {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0;
+}
+
+.trk-site-link {
+  color: inherit;
+}
+.trk-site-link:hover {
+  color: var(--ink);
 }
