@@ -1970,25 +1970,29 @@ h1, h2, h3, h4 {
 }
 
 /* Override scoped dei componenti condivisi ancora chiari */
-.cal-page .btn-outline-snappy {
+.cal-page .btn-outline-snappy,
+.org-page .btn-outline-snappy {
   background: transparent;
   border-color: var(--line);
   color: var(--muted);
 }
-.cal-page .btn-outline-snappy:hover {
+.cal-page .btn-outline-snappy:hover,
+.org-page .btn-outline-snappy:hover {
   border-color: var(--muted);
   color: var(--ink);
   box-shadow: 4px 4px 0 var(--accent);
   transform: translate(-2px, -2px);
 }
-.cal-page .btn-outline-snappy:disabled:hover {
+.cal-page .btn-outline-snappy:disabled:hover,
+.org-page .btn-outline-snappy:disabled:hover {
   border-color: var(--line);
   color: var(--muted);
   box-shadow: none;
   transform: none;
 }
 .cal-page .btn-snappy,
-.dsh-page .btn-snappy {
+.dsh-page .btn-snappy,
+.org-page .btn-snappy {
   background-image: linear-gradient(to right, var(--accent) 50%, #171a1f 50%);
 }
 .cal-page .empty-state,
@@ -2263,4 +2267,102 @@ h1, h2, h3, h4 {
 
 @media (max-width: 560px) {
   .evt-row-vals { gap: 12px; }
+}
+
+/* ============================================================
+   ORGANIZER DASHBOARD — migrazione dark (sezione 5 brief, seguito).
+   Riusa la shell .rkc-page/HudFrame. Introduce la variante scura
+   di .brutalist-input-group (modificatore .is-dark, pensato per
+   essere riusato anche da Auth) e .dark-input per i campi senza
+   wrapper (righe classifica risultati).
+   ============================================================ */
+.org-page { color-scheme: dark; }
+
+.org-hero { min-height: 26vh; padding-bottom: 40px; }
+
+.org-panel {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  padding: 30px;
+  max-width: 720px;
+}
+.org-panel + .org-panel { margin-top: 40px; }
+
+.org-panel-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.org-msg {
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-family: var(--font-hud);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+  border: 1px solid;
+}
+.org-msg.is-success { background: rgba(180, 255, 46, 0.08); border-color: var(--accent2); color: var(--accent2); }
+.org-msg.is-error { background: rgba(228, 0, 43, 0.1); border-color: var(--accent); color: var(--accent); }
+
+.org-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+/* Variante scura di .brutalist-input-group (riusabile — anche Auth) */
+.brutalist-input-group.is-dark label { color: var(--ink); }
+.brutalist-input-group.is-dark input,
+.brutalist-input-group.is-dark select,
+.brutalist-input-group.is-dark textarea,
+.dark-input {
+  padding: 12px;
+  border: 2px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  font-family: var(--font-hud);
+  font-size: 0.95rem;
+  font-weight: 700;
+  outline: none;
+  transition: all 0.15s;
+}
+.brutalist-input-group.is-dark input::placeholder,
+.brutalist-input-group.is-dark textarea::placeholder,
+.dark-input::placeholder { color: var(--muted); font-weight: 400; }
+
+.brutalist-input-group.is-dark input:focus,
+.brutalist-input-group.is-dark select:focus,
+.brutalist-input-group.is-dark textarea:focus,
+.dark-input:focus {
+  border-color: var(--accent2);
+  box-shadow: 4px 4px 0px var(--accent2);
+  transform: translate(-2px, -2px);
+}
+
+.org-row-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 70px 70px 40px;
+  gap: 10px;
+  align-items: center;
+}
+.org-row-remove {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  padding: 4px;
+}
+.org-row-remove:hover { color: #ff1a45; }
+
+@media (max-width: 600px) {
+  .org-panel { padding: 22px; }
+  .org-row-grid { grid-template-columns: 1fr 60px 60px 36px; }
 }
