@@ -2210,3 +2210,57 @@ h1, h2, h3, h4 {
   .dsh-row { animation: none; opacity: 1; transform: none; }
   .dsh-bar { transition: none; }
 }
+
+/* ============================================================
+   EVENT DETAILS — migrazione dark (sezione 5 brief, seguito).
+   Riusa .rkc-board/.rkc-row/.rkc-tile/.rkc-detail gia introdotti
+   da RkcAsi; qui la classifica ha due valori per riga (best lap +
+   punti) invece di uno solo, incapsulati in .evt-row-vals cosi il
+   grid a 3 colonne di .rkc-row resta invariato.
+   ============================================================ */
+.evt-hero .rkc-title {
+  font-size: clamp(32px, 5vw, 64px);
+  line-height: 1.08;
+}
+
+.evt-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-hud);
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  margin-bottom: 20px;
+  transition: color 0.15s;
+}
+.evt-back:hover { color: var(--ink); }
+
+.evt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.evt-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-hud);
+  font-size: 0.85rem;
+  color: #c2c8ce;
+}
+
+.evt-row-vals {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+@media (max-width: 560px) {
+  .evt-row-vals { gap: 12px; }
+}

@@ -4,7 +4,9 @@ import { getEventById, getEventLapTimes } from '../lib/eventsRepository';
 import { getEventStandings } from '../lib/pilotsRepository';
 import { formatTimeMs } from '../lib/utils';
 import { formatEventDate, formatLabel } from '../lib/format';
-import { Trophy, Timer, ChevronLeft, MapPin, Calendar, Activity } from 'lucide-react';
+import { ChevronLeft, MapPin, Calendar, X } from 'lucide-react';
+import HudFrame from '../components/HudFrame';
+import SectionEyebrow from '../components/SectionEyebrow';
 
 function EventDetails() {
   const { id } = useParams();
@@ -12,7 +14,9 @@ function EventDetails() {
   const [standings, setStandings] = useState([]);
   const [lapTimes, setLapTimes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedPilotId, setExpandedPilotId] = useState(null);
+  // Chiave sull id del risultato, non sul pilot_id: i piloti inseriti a mano
+  // senza profilo registrato hanno pilot_id NULL e non sarebbero espandibili.
+  const [expandedResultId, setExpandedResultId] = useState(null);
 
   useEffect(() => {
     async function loadEventData() {
@@ -37,159 +41,131 @@ function EventDetails() {
 
   if (loading) {
     return (
-      <div className="container main-content font-mono" style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-        // CALCOLO CLASSIFICHE IN CORSO...
+      <div className="rkc-page evt-page">
+        <div className="rkc-empty" style={{ padding: '180px 0' }}>// CALCOLO CLASSIFICHE...</div>
       </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="container main-content" style={{ padding: '60px 0', textAlign: 'center' }}>
-        <h2 style={{ color: 'var(--castrol-red)' }}>EVENTO NON TROVATO</h2>
-        <Link to="/calendar" className="btn-outline-snappy" style={{ marginTop: '20px' }}>Torna al Calendario</Link>
+      <div className="rkc-page evt-page">
+        <div className="rkc-empty" style={{ padding: '160px 24px' }}>
+          <p style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '1.1rem', marginBottom: '16px' }}>
+            EVENTO NON TROVATO
+          </p>
+          <Link to="/calendar" className="cal-btn is-primary">Torna al Calendario</Link>
+        </div>
       </div>
     );
   }
 
-  const togglePilot = (pilotId) => {
-    setExpandedPilotId(prev => prev === pilotId ? null : pilotId);
+  const toggleResult = (resultId) => {
+    setExpandedResultId(prev => prev === resultId ? null : resultId);
   };
 
-  const getLapsForPilot = (pilotId) => {
-    return lapTimes.filter(l => l.race_results?.pilot_id === pilotId);
+  const getLapsForResult = (resultId) => {
+    return lapTimes.filter(l => l.race_results?.id === resultId);
   };
+
+  const expandedStanding = standings.find(s => s.result_id === expandedResultId) || null;
+  const expandedLaps = expandedResultId ? getLapsForResult(expandedResultId) : [];
 
   return (
-    <div className="container main-content">
-      {/* Header Evento */}
-      <div style={{ marginBottom: '40px' }}>
-        <Link to="/calendar" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 'bold', marginBottom: '16px', textTransform: 'uppercase' }}>
-          <ChevronLeft size={16} /> Torna al Calendario
-        </Link>
-        <h1 style={{ fontSize: '3rem', lineHeight: '1.1', marginBottom: '16px' }}>{event.title}</h1>
-        
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-          <div className="info-box info-box-location">
-            <MapPin size={18} />
-            <span>{event.track_name}</span>
-          </div>
-          <div className="info-box info-box-date">
-            <Calendar size={18} />
-            <span>{formatEventDate(event.event_date)}</span>
-          </div>
-          <div className={`tag ${event.event_type?.toLowerCase() === 'sprint' ? 'tag-sprint' : 'tag-endurance'}`} style={{ alignSelf: 'center' }}>
-            {event.event_type}
-          </div>
-          {event.format && <div className="tag" style={{ alignSelf: 'center' }}>{formatLabel(event.format)}</div>}
-        </div>
-      </div>
-
-      {/* Classifiche */}
-      <div className="card-snappy" style={{ padding: '0', overflow: 'hidden' }}>
-        <div className="card-header" style={{ background: 'var(--text-main)', color: 'white', borderBottom: 'none' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '1.5rem' }}>
-            <Trophy size={24} /> Classifica Finale
-          </h2>
+    <div className="rkc-page evt-page">
+      {/* ---------- HERO ---------- */}
+      <HudFrame className="rkc-hero evt-hero" style={{ '--hud-size': '30px', '--hud-inset': '20px' }}>
+        <div className="khub-bg" aria-hidden="true">
+          <div className="khub-bg-grid" />
+          <div className="khub-bg-speed" />
+          <div className="khub-bg-grain" />
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-light)', borderBottom: '2px solid var(--text-main)', textTransform: 'uppercase', fontSize: '0.85rem' }}>
-                <th style={{ padding: '16px', width: '60px', textAlign: 'center' }}>Pos</th>
-                <th style={{ padding: '16px' }}>Pilota</th>
-                <th style={{ padding: '16px', textAlign: 'right' }}>Best Lap</th>
-                <th style={{ padding: '16px', textAlign: 'right' }}>Punti</th>
-                <th style={{ padding: '16px', width: '60px' }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {standings.length === 0 ? (
-                <tr>
-                  <td colSpan="5" style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: 'bold' }}>
-                    Nessun risultato caricato per questo evento.
-                  </td>
-                </tr>
-              ) : (
-                standings.map((std, idx) => {
-                  const isExpanded = expandedPilotId === std.pilot_id;
-                  const pilotLaps = getLapsForPilot(std.pilot_id);
-                  const isPodium = std.position <= 3 && std.position > 0;
-                  
-                  return (
-                    <React.Fragment key={std.result_id || idx}>
-                      <tr 
-                        onClick={() => togglePilot(std.pilot_id)}
-                        style={{ 
-                          borderBottom: '1px solid var(--border-color)', 
-                          cursor: 'pointer',
-                          background: isExpanded ? 'rgba(227, 24, 55, 0.05)' : 'transparent',
-                          transition: 'background 0.2s'
-                        }}
-                      >
-                        <td style={{ padding: '16px', textAlign: 'center', fontWeight: '900', fontSize: '1.2rem', color: isPodium ? 'var(--castrol-green)' : 'var(--text-main)' }}>
-                          {std.position || '-'}
-                        </td>
-                        <td style={{ padding: '16px', fontWeight: 'bold', fontSize: '1.1rem', textTransform: 'uppercase' }}>
-                          {std.pilot_name}
-                        </td>
-                        <td style={{ padding: '16px', textAlign: 'right' }} className="font-mono">
-                          {std.best_lap_ms ? formatTimeMs(std.best_lap_ms) : '--:--.---'}
-                        </td>
-                        <td style={{ padding: '16px', textAlign: 'right', fontWeight: '900', fontSize: '1.2rem' }} className="font-mono">
-                          {std.points || 0}
-                        </td>
-                        <td style={{ padding: '16px', textAlign: 'center', color: 'var(--castrol-red)' }}>
-                          <Activity size={20} style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                        </td>
-                      </tr>
-                      
-                      {/* Dettaglio Tempi (Accordion) */}
-                      {isExpanded && (
-                        <tr>
-                          <td colSpan="5" style={{ padding: 0, borderBottom: '2px solid var(--text-main)' }}>
-                            <div style={{ background: 'var(--bg-light)', padding: '20px', borderLeft: '4px solid var(--castrol-red)' }}>
-                              <h4 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Timer size={16} /> Dettaglio Tempi
-                              </h4>
-                              
-                              {pilotLaps.length === 0 ? (
-                                <p style={{ color: 'var(--text-muted)' }} className="font-mono">Nessun tempo registrato.</p>
-                              ) : (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px' }}>
-                                  {pilotLaps.map(lap => {
-                                    const isBest = lap.time_ms === std.best_lap_ms;
-                                    return (
-                                      <div key={lap.id} style={{ 
-                                        padding: '8px 12px', 
-                                        background: isBest ? 'var(--castrol-red)' : 'white',
-                                        color: isBest ? 'white' : 'var(--text-main)',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: '4px',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center'
-                                      }}>
-                                        <span style={{ fontSize: '0.7rem', fontWeight: 'bold', opacity: 0.8, textTransform: 'uppercase' }}>Giro {lap.lap_number}</span>
-                                        <span className="font-mono" style={{ fontWeight: 'bold', fontSize: '1rem' }}>{formatTimeMs(lap.time_ms)}</span>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+        <div className="rkc-hero-inner">
+          <Link to="/calendar" className="evt-back">
+            <ChevronLeft size={16} /> Torna al Calendario
+          </Link>
+          <SectionEyebrow className="rkc-hero-eyebrow">Scheda Evento</SectionEyebrow>
+          <h1 className="rkc-title">{event.title}</h1>
+
+          <div className="evt-meta">
+            <span className="evt-meta-item"><MapPin size={16} /> {event.track_name}</span>
+            <span className="evt-meta-item"><Calendar size={16} /> {formatEventDate(event.event_date)}</span>
+            <span className={`khub-event-tag ${event.event_type?.toLowerCase() === 'sprint' ? 'is-sprint' : 'is-endurance'}`}>
+              {event.event_type}
+            </span>
+            {event.format && <span className="khub-event-tag">{formatLabel(event.format)}</span>}
+          </div>
         </div>
-      </div>
+      </HudFrame>
+
+      {/* ---------- CLASSIFICA ---------- */}
+      <section className="rkc-section container">
+        <div className="rkc-section-head">
+          <div>
+            <SectionEyebrow className="rkc-section-eyebrow">Risultati</SectionEyebrow>
+            <h2 className="rkc-section-title">Classifica Finale</h2>
+          </div>
+        </div>
+
+        {standings.length === 0 ? (
+          <div className="rkc-empty">// Nessun risultato caricato per questo evento</div>
+        ) : (
+          <div className="rkc-board">
+            {standings.map((std, idx) => (
+              <button
+                key={std.result_id || idx}
+                className={`rkc-row ${expandedResultId === std.result_id ? 'selected' : ''}`.trim()}
+                onClick={() => toggleResult(std.result_id)}
+                aria-expanded={expandedResultId === std.result_id}
+              >
+                <span className="rkc-pos">{std.position || '-'}</span>
+                <span className="rkc-drv">{std.pilot_name}</span>
+                <span className="evt-row-vals">
+                  <span className="rkc-val is-lap">
+                    {std.best_lap_ms ? formatTimeMs(std.best_lap_ms) : '--:--.---'}
+                    <small>BEST LAP</small>
+                  </span>
+                  <span className="rkc-val">
+                    {std.points || 0}
+                    <small>PUNTI</small>
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {expandedStanding && (
+          <HudFrame className="rkc-detail" corners={['tl', 'br']}>
+            <div className="rkc-detail-head">
+              <div>
+                <div className="rkc-detail-name">{expandedStanding.pilot_name}</div>
+                <div className="rkc-detail-team">Dettaglio tempi sul giro</div>
+              </div>
+              <button className="rkc-detail-close" onClick={() => setExpandedResultId(null)} aria-label="Chiudi dettaglio">
+                <X size={18} />
+              </button>
+            </div>
+
+            {expandedLaps.length === 0 ? (
+              <p className="dsh-telemetry-text" style={{ margin: 0 }}>Nessun tempo registrato.</p>
+            ) : (
+              <div className="rkc-detail-grid">
+                {expandedLaps.map(lap => (
+                  <div
+                    key={lap.id}
+                    className={`rkc-tile ${lap.time_ms === expandedStanding.best_lap_ms ? 'is-lap' : ''}`.trim()}
+                  >
+                    <b>{formatTimeMs(lap.time_ms)}</b>
+                    <span>Giro {lap.lap_number}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </HudFrame>
+        )}
+      </section>
     </div>
   );
 }
