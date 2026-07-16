@@ -2416,3 +2416,106 @@ h1, h2, h3, h4 {
 @media (max-width: 480px) {
   .auth-card { padding: 28px 22px; }
 }
+
+/* ============================================================
+   GUIDA RENTAL — migrazione dark (fuori scope §5, richiesta a parte).
+   Riusa la shell .rkc-page/HudFrame come le altre pagine gia
+   migrate. Pannelli testuali .gd-panel, card formati .gd-format-*,
+   glossario a griglia .gd-glossary, FAQ .gd-faq-* (chevron ruotato
+   via [aria-expanded] invece di stato inline).
+   ============================================================ */
+.guide-hero { min-height: 30vh; padding-bottom: 44px; }
+
+.gd-block { margin-bottom: 30px; }
+
+.gd-panel {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  padding: 26px 30px;
+  margin-bottom: 24px;
+}
+
+.gd-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+}
+.gd-panel-title svg { color: var(--accent2); flex-shrink: 0; }
+
+.gd-text { color: var(--muted); line-height: 1.7; margin: 0; font-size: 0.95rem; }
+.gd-text a { color: var(--accent2); font-weight: 700; text-decoration: none; }
+.gd-text a:hover { text-decoration: underline; }
+
+.gd-format-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.gd-format-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  padding: 20px;
+}
+.gd-format-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+}
+.gd-format-card svg { color: var(--accent2); flex-shrink: 0; }
+.gd-format-card p { margin: 10px 0 0; color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+.gd-panel-head { padding: 26px 30px 0; }
+
+.gd-glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.gd-glossary-item { padding: 18px 20px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); }
+.gd-term {
+  font-family: var(--font-hud);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.82rem;
+  color: var(--accent2);
+  margin-bottom: 4px;
+}
+.gd-def { color: var(--muted); font-size: 0.88rem; line-height: 1.55; }
+
+.gd-faq-item { border-bottom: 1px solid var(--line); }
+.gd-faq-item:last-child { border-bottom: none; }
+.gd-faq-btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 30px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+.gd-faq-btn svg { flex-shrink: 0; color: var(--accent2); transition: transform 0.2s; }
+.gd-faq-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+.gd-faq-answer { padding: 0 30px 22px; color: var(--muted); line-height: 1.6; font-size: 0.92rem; }
+
+@media (max-width: 600px) {
+  .gd-panel { padding: 22px; }
+  .gd-panel-head { padding: 22px 22px 0; }
+  .gd-faq-btn, .gd-faq-answer { padding-left: 22px; padding-right: 22px; }
+}
