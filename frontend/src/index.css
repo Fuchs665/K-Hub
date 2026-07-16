@@ -612,9 +612,9 @@ h1, h2, h3, h4 {
   display: block;
 }
 
-/* Regioni della mappa — token dark: rosso = con piste, lime = selezionata */
+/* Regioni della mappa — token dark: bianco = senza piste (leggibile sullo sfondo scuro), rosso = con piste, lime = selezionata */
 .italy-region {
-  fill: #1a1e24;
+  fill: #e8eaed;
   stroke: var(--bg2);
   stroke-width: 0.7;
   stroke-linejoin: round;
@@ -682,7 +682,7 @@ h1, h2, h3, h4 {
 }
 
 .swatch-active { background: var(--accent); }
-.swatch-empty { background: #1a1e24; }
+.swatch-empty { background: #e8eaed; }
 
 /* Testata lista */
 .tracks-list-head {
