@@ -7,7 +7,7 @@ import { formatEventDate, generateCalendarLink } from '../lib/format';
 // khub-event-card (RkcAsi/Home) ma con la riga di azioni del calendario.
 function EventCard({ event }) {
   return (
-    <article className="cal-event-card">
+    <article className="rkc-card">
       <div className="khub-event-top">
         <span className={`khub-event-tag ${event.event_type?.toLowerCase() === 'sprint' ? 'is-sprint' : 'is-endurance'}`}>
           {event.event_type}
@@ -55,7 +55,7 @@ function EventCard({ event }) {
 
 export function EventCardSkeleton() {
   return (
-    <div className="cal-event-card" aria-hidden="true" style={{ gap: '14px' }}>
+    <div className="rkc-card" aria-hidden="true" style={{ gap: '14px' }}>
       <span className="khub-skel" style={{ width: '40%' }} />
       <span className="khub-skel" style={{ width: '85%', height: '22px' }} />
       <span className="khub-skel" style={{ width: '60%' }} />

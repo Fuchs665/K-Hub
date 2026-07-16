@@ -114,7 +114,7 @@ function TracksDirectory() {
               ) : (
                 <div className="tracks-grid">
                   {visibleTracks.map(track => (
-                    <article key={track.id} className="cal-event-card trk-card">
+                    <article key={track.id} className="rkc-card trk-card">
                       <h3 className="khub-event-title">{track.name}</h3>
 
                       <div className="cal-event-info">

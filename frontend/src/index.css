@@ -376,25 +376,6 @@ h1, h2, h3, h4 {
 }
 
 /* Scroll Tabs & Utilities */
-.scroll-btn {
-  background: white;
-  border: 2px solid var(--text-main);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
-  color: var(--text-main);
-}
-.scroll-btn:hover {
-  background: var(--text-main);
-  color: white;
-}
-
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -509,11 +490,6 @@ h1, h2, h3, h4 {
 
   .nav-link {
     font-size: 1rem;
-  }
-
-  .scroll-btn {
-    width: 30px;
-    height: 30px;
   }
 
   .hero-stats {
@@ -1892,7 +1868,7 @@ h1, h2, h3, h4 {
 
 /* Card evento dark: stessa firma visiva di khub-event-card ma come
    contenitore statico con riga azioni, entrata in cascata */
-.cal-event-card {
+.rkc-card {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1907,16 +1883,16 @@ h1, h2, h3, h4 {
   animation: khubEnter 0.45s forwards;
   transition: border-color 0.18s, background 0.18s;
 }
-.cal-event-card:nth-child(1) { animation-delay: 0.04s; }
-.cal-event-card:nth-child(2) { animation-delay: 0.10s; }
-.cal-event-card:nth-child(3) { animation-delay: 0.16s; }
-.cal-event-card:nth-child(4) { animation-delay: 0.22s; }
-.cal-event-card:nth-child(5) { animation-delay: 0.28s; }
-.cal-event-card:nth-child(6) { animation-delay: 0.34s; }
-.cal-event-card:nth-child(7) { animation-delay: 0.40s; }
-.cal-event-card:nth-child(8) { animation-delay: 0.46s; }
+.rkc-card:nth-child(1) { animation-delay: 0.04s; }
+.rkc-card:nth-child(2) { animation-delay: 0.10s; }
+.rkc-card:nth-child(3) { animation-delay: 0.16s; }
+.rkc-card:nth-child(4) { animation-delay: 0.22s; }
+.rkc-card:nth-child(5) { animation-delay: 0.28s; }
+.rkc-card:nth-child(6) { animation-delay: 0.34s; }
+.rkc-card:nth-child(7) { animation-delay: 0.40s; }
+.rkc-card:nth-child(8) { animation-delay: 0.46s; }
 
-.cal-event-card:hover {
+.rkc-card:hover {
   background: #12151a;
   border-left-color: var(--accent2);
 }
@@ -2008,15 +1984,15 @@ h1, h2, h3, h4 {
 .dsh-page .empty-state p { color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cal-event-card { animation: none; opacity: 1; transform: none; }
+  .rkc-card { animation: none; opacity: 1; transform: none; }
   .month-cell.has-events:hover { transform: none; }
 }
 
 /* ============================================================
    LE PISTE — migrazione dark (sezione 5 brief).
-   Riusa la shell .rkc-page, la hero rkc- e la card dark del
-   calendario (cal-event-card come base condivisa, da rinominare
-   in una classe neutra nel commit di pulizia finale). Le classi
+   Riusa la shell .rkc-page, la hero rkc- e la card dark condivisa
+   .rkc-card (nata nel Calendario, rinominata da .cal-event-card
+   nel commit di pulizia finale). Le classi
    della mappa (italy-region, legenda) sono migrate ai token nei
    loro blocchi originali. La card e pensata per ospitare in
    futuro una foto del circuito con overlay senza ristrutturare.
