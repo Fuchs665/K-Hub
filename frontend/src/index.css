@@ -1992,7 +1992,8 @@ h1, h2, h3, h4 {
 }
 .cal-page .btn-snappy,
 .dsh-page .btn-snappy,
-.org-page .btn-snappy {
+.org-page .btn-snappy,
+.auth-page .btn-snappy {
   background-image: linear-gradient(to right, var(--accent) 50%, #171a1f 50%);
 }
 .cal-page .empty-state,
@@ -2365,4 +2366,77 @@ h1, h2, h3, h4 {
 @media (max-width: 600px) {
   .org-panel { padding: 22px; }
   .org-row-grid { grid-template-columns: 1fr 60px 60px 36px; }
+}
+
+/* ============================================================
+   AUTH — migrazione dark (sezione 5 brief, seguito).
+   Card centrata su sfondo animato khub-bg (fuori da una hero),
+   riusa .rkc-toggle per i tab Pilota/Pista e la variante
+   .is-dark/.dark-input introdotta da OrganizerDashboard.
+   ============================================================ */
+.auth-page {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100vh - 90px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 24px 60px;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 460px;
+  background: var(--bg2);
+  padding: 40px;
+}
+
+.auth-eyebrow.section-eyebrow {
+  justify-content: center;
+  text-align: center;
+  color: var(--accent2);
+  margin-bottom: 10px;
+}
+.auth-eyebrow .section-eyebrow-mark { color: var(--accent2); }
+
+.auth-title {
+  font-size: clamp(28px, 6vw, 38px);
+  line-height: 1;
+  text-align: center;
+  margin: 0 0 24px;
+}
+
+.auth-tabs.rkc-toggle { width: 100%; margin-bottom: 24px; }
+.auth-tabs .rkc-toggle-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-desc {
+  text-align: center;
+  margin: 0 0 22px;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 20px; }
+
+.auth-submit { width: 100%; padding: 14px; }
+
+.auth-switch { margin-top: 20px; text-align: center; font-family: var(--font-hud); font-size: 0.8rem; }
+.auth-switch-btn {
+  background: none;
+  border: none;
+  color: var(--accent2);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.auth-switch-btn:hover { color: var(--ink); }
+
+@media (max-width: 480px) {
+  .auth-card { padding: 28px 22px; }
 }

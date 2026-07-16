@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { User, Shield, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import HudFrame from '../components/HudFrame';
+import SectionEyebrow from '../components/SectionEyebrow';
 
 async function ensureProfile(userId, role) {
   const { data: existing } = await supabase
@@ -55,72 +57,65 @@ function Auth() {
   };
 
   return (
-    <div className="container main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh' }}>
-      <div style={{ background: 'var(--bg-card)', padding: '40px', border: '4px solid var(--text-main)', width: '100%', maxWidth: '500px', position: 'relative' }}>
+    <div className="rkc-page auth-page">
+      <div className="khub-bg" aria-hidden="true">
+        <div className="khub-bg-grid" />
+        <div className="khub-bg-speed" />
+        <div className="khub-bg-grain" />
+      </div>
 
-        <h2 style={{ textAlign: 'center', marginBottom: '20px', fontSize: '2rem' }}>ACCEDI A K-HUB</h2>
+      <HudFrame className="auth-card" corners={['tl', 'br']} style={{ '--hud-size': '24px', '--hud-inset': '16px' }}>
+        <SectionEyebrow className="auth-eyebrow" as="div">Area Riservata</SectionEyebrow>
+        <h1 className="rkc-title auth-title">Accedi a <em>K-Hub</em></h1>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', marginBottom: '30px', border: '2px solid var(--text-main)' }}>
+        <div className="rkc-toggle auth-tabs">
           <button
-            style={{ flex: 1, padding: '12px', background: activeTab === 'pilota' ? 'var(--text-main)' : 'transparent', color: activeTab === 'pilota' ? 'white' : 'var(--text-main)', border: 'none', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            className={`rkc-toggle-btn ${activeTab === 'pilota' ? 'active' : ''}`.trim()}
             onClick={() => setActiveTab('pilota')}
           >
-            <User size={18} /> Pilota
+            <User size={16} /> Pilota
           </button>
           <button
-            style={{ flex: 1, padding: '12px', background: activeTab === 'pista' ? 'var(--text-main)' : 'transparent', color: activeTab === 'pista' ? 'white' : 'var(--text-main)', border: 'none', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderLeft: '2px solid var(--text-main)' }}
+            className={`rkc-toggle-btn ${activeTab === 'pista' ? 'active' : ''}`.trim()}
             onClick={() => setActiveTab('pista')}
           >
-            <Shield size={18} /> Pista
+            <Shield size={16} /> Pista
           </button>
         </div>
 
-        <div style={{ marginBottom: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <p className="org-hint auth-desc">
           {activeTab === 'pilota' ?
             "Salva i tuoi eventi preferiti e ricevi newsletter personalizzate." :
             "Accedi all'Area Organizzatori per inserire e gestire i tuoi eventi a calendario."
           }
-        </div>
+        </p>
 
-        {infoMsg && (
-          <div style={{ background: 'var(--castrol-green)', color: 'white', padding: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
-            {infoMsg}
-          </div>
-        )}
+        {infoMsg && <div className="org-msg is-success">{infoMsg}</div>}
+        {errorMsg && <div className="org-msg is-error">{errorMsg}</div>}
 
-        {errorMsg && (
-          <div style={{ background: 'var(--castrol-red)', color: 'white', padding: '12px', marginBottom: '20px', fontWeight: 'bold' }}>
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div className="brutalist-input-group">
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="brutalist-input-group is-dark">
             <label>EMAIL</label>
             <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" />
           </div>
 
-          <div className="brutalist-input-group">
+          <div className="brutalist-input-group is-dark">
             <label>PASSWORD</label>
             <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" minLength={6} />
           </div>
 
-          <button type="submit" disabled={loading} className="btn-snappy" style={{ width: '100%', padding: '14px', justifyContent: 'center', marginTop: '10px' }}>
+          <button type="submit" disabled={loading} className="btn-snappy auth-submit">
             {loading ? 'ATTENDERE...' : (isLogin ? 'ACCEDI' : 'CREA ACCOUNT')} <ChevronRight size={18} />
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.9rem' }}>
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            style={{ background: 'none', border: 'none', color: 'var(--castrol-red)', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
-          >
+        <div className="auth-switch">
+          <button onClick={() => setIsLogin(!isLogin)} className="auth-switch-btn">
             {isLogin ? "Non hai un account? Registrati" : "Hai già un account? Accedi"}
           </button>
         </div>
-
-      </div>
+      </HudFrame>
     </div>
   );
 }
