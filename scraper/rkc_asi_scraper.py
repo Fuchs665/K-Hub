@@ -1,6 +1,6 @@
 import html
 import re
-import requests
+from toolkit.http import HttpClient, RateLimiter, RetryConfig
 from scraper_base import KartingEvent, PROVINCE_TO_REGION, load_track_regions
 
 API_URL = "https://www.rkcasikarting.it/wp-json/tribe/events/v1/events"
@@ -61,9 +61,18 @@ def fetch_all_events():
     raw_events = []
     url = f"{API_URL}?per_page=50"
 
+    # Rate limit sul loop di paginazione: max 1 richiesta al secondo verso il
+    # sito RKC ASI; retry/backoff su timeout e 429/503 gestiti dal client.
+    client = HttpClient(
+        user_agent="K-Hub-Scraper/0.1",
+        timeout=15.0,
+        retry_config=RetryConfig(max_retries=2, backoff_factor=1.0),
+        rate_limiter=RateLimiter(min_interval=1.0),
+    )
+
     for _ in range(10):
         try:
-            response = requests.get(url, timeout=15)
+            response = client.get(url)
             response.raise_for_status()
             payload = response.json()
         except Exception as e:

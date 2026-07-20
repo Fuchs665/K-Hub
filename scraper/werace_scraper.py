@@ -1,19 +1,22 @@
-import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
+from toolkit.http import HttpClient, RateLimiter, RetryConfig
 from scraper_base import KartingEvent
 
 def scrape_werace_events():
     url = "https://we-race.it/eventi/"
     print(f"Scaricando eventi WeRace da: {url}")
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, come Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
+
+    client = HttpClient(
+        user_agent="K-Hub-Scraper/0.1",
+        timeout=15.0,
+        retry_config=RetryConfig(max_retries=2, backoff_factor=1.0),
+        rate_limiter=RateLimiter(min_interval=1.0),
+    )
 
     try:
-        response = requests.get(url, headers=headers, timeout=15)
+        response = client.get(url)
         response.raise_for_status()
         html = response.text
     except Exception as e:

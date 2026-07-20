@@ -4,3 +4,8 @@ supabase==2.10.0
 python-dotenv
 playwright
 playwright-stealth
+# Libreria interna condivisa (encoding-safe, HTTP resiliente, date italiane, dedup).
+# Su questa macchina e' installata editable dal repo locale:
+-e C:/Users/FCD/Documents/it-scraper-toolkit
+# Alternativa portatile (richiede accesso al repo privato):
+#   git+https://github.com/Fuchs665/it-scraper-toolkit.git

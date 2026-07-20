@@ -1,14 +1,21 @@
-import requests
 from datetime import datetime
 import re
+from toolkit.http import HttpClient, RateLimiter, RetryConfig
 from scraper_base import KartingEvent
 
 def scrape_xrace_events():
     url = "https://xracemotorsport.com/products.json?limit=250"
     print(f"Scaricando eventi XRace API da: {url}")
-    
+
+    client = HttpClient(
+        user_agent="K-Hub-Scraper/0.1",
+        timeout=10.0,
+        retry_config=RetryConfig(max_retries=2, backoff_factor=1.0),
+        rate_limiter=RateLimiter(min_interval=1.0),
+    )
+
     try:
-        response = requests.get(url, timeout=10)
+        response = client.get(url)
         response.raise_for_status()
         data = response.json()
     except Exception as e:

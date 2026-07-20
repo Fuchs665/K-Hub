@@ -1,19 +1,22 @@
-import requests
 from bs4 import BeautifulSoup
 import re
-from datetime import datetime
+from toolkit.http import HttpClient, RateLimiter, RetryConfig
+from toolkit.normalize import parse_italian_date
 from scraper_base import KartingEvent
 
 def scrape_krm_events():
     url = "https://www.kartingrentalmaster.it/calendario/"
     print(f"Scaricando eventi Karting Rental Master da: {url}")
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, come Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
+
+    client = HttpClient(
+        user_agent="K-Hub-Scraper/0.1",
+        timeout=15.0,
+        retry_config=RetryConfig(max_retries=2, backoff_factor=1.0),
+        rate_limiter=RateLimiter(min_interval=1.0),
+    )
 
     try:
-        response = requests.get(url, headers=headers, timeout=15)
+        response = client.get(url)
         response.raise_for_status()
         html = response.text
     except Exception as e:
@@ -58,11 +61,10 @@ def scrape_krm_events():
         seen_events.add(unique_key)
 
         # Converti DD/MM/YYYY in YYYY-MM-DD
-        try:
-            date_obj = datetime.strptime(date_str_ita, "%d/%m/%Y")
-            event_date_str = date_obj.strftime("%Y-%m-%d")
-        except:
+        date_obj = parse_italian_date(date_str_ita)
+        if date_obj is None:
             continue # Data invalida
+        event_date_str = date_obj.isoformat()
 
         event = KartingEvent(
             title=f"KRM Sprint - {track_name}",

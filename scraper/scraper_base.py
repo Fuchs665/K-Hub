@@ -4,18 +4,24 @@ from datetime import datetime
 # pyrefly: ignore [missing-import]
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from toolkit.encoding import configure_stdio, read_text
+from toolkit.normalize import parse_italian_date
+
+# Stdout/stderr su utf-8 con degradazione controllata: le print con caratteri
+# non-cp1252 (accenti nei titoli evento, ecc.) non crashano piu' su Windows.
+# Eseguito a import-time come load_env(), cosi' vale per tutti gli scraper.
+configure_stdio()
 
 # Funzione per leggere dal file .env.local dello scraper (separato dal frontend:
 # qui serve la service_role key, che deve restare fuori dalla dir frontend/).
 def load_env():
     env_path = os.path.join(os.path.dirname(__file__), '.env.local')
     if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
-            for line in f:
-                if '=' in line:
-                    key, value = line.strip().split('=', 1)
-                    if value:
-                        os.environ[key] = value
+        for line in read_text(env_path).splitlines():
+            if '=' in line:
+                key, value = line.strip().split('=', 1)
+                if value:
+                    os.environ[key] = value
 
 load_env()
 
@@ -196,8 +202,8 @@ def scrape_sws_events(html_file_path=None):
 
     if html_file_path and os.path.exists(html_file_path):
         print(f"Leggo l'HTML locale da: {html_file_path}")
-        with open(html_file_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
+        # read_text: utf-8 con fallback cp1252, non crasha su byte sporchi.
+        html_content = read_text(html_file_path)
     else:
         url = "https://www.sodiwseries.com/it-it/races/"
         print(f"Effettuo navigazione con Playwright a {url}")
@@ -274,10 +280,13 @@ def scrape_sws_events(html_file_path=None):
             country_class = flag_span['class'][1] if flag_span and len(flag_span['class']) > 1 else ''
             
             if 'country-flag-it' in country_class:
-                # 1. Parsing Data (es. 01/07/2026 -> 2026-07-01)
+                # 1. Parsing Data (es. 01/07/2026 -> 2026-07-01); parse_italian_date
+                # tollera anche varianti tipo 01-07-2026 o 1/7/2026.
                 raw_date = tds[1].text.strip()
-                date_obj = datetime.strptime(raw_date, '%d/%m/%Y')
-                event_date = date_obj.strftime('%Y-%m-%d')
+                date_obj = parse_italian_date(raw_date)
+                if date_obj is None:
+                    continue  # data non interpretabile: riga saltata
+                event_date = date_obj.isoformat()
                 
                 # 2. Parsing Tipo Gara
                 logo_span = tds[0].find('span', class_='table-category-logo')
