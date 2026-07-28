@@ -7,42 +7,11 @@ import HudFrame from '../components/HudFrame';
 import SectionEyebrow from '../components/SectionEyebrow';
 import { formatEventDate } from '../lib/format';
 
-// Classifica MOCK del campionato. Stessa forma dei futuri record aggregati da
-// race_results (punti stagione + ultima gara) e lap_times (best lap): quando i
-// dati reali esisteranno basta rimpiazzare MOCK_LEADERBOARD con la query, senza
-// toccare la UI. Le tre viste ordinano lo stesso set su metriche diverse.
-const MOCK_LEADERBOARD = [
-  { id: 'p1', driver: 'M. Rossi',     team: 'Scuderia Cremona',        points: 218, lastPts: 18, lastPos: 2, bestLapMs: 62418, races: 9, wins: 4, podiums: 7 },
-  { id: 'p2', driver: 'L. Bianchi',   team: 'Kart Team Lazio',         points: 205, lastPts: 12, lastPos: 4, bestLapMs: 61890, races: 9, wins: 3, podiums: 6 },
-  { id: 'p3', driver: 'D. Furchia',   team: 'RKC Milano',              points: 197, lastPts: 25, lastPos: 1, bestLapMs: 61240, races: 9, wins: 2, podiums: 5 },
-  { id: 'p4', driver: 'A. Verdi',     team: 'Sodi Racing',             points: 184, lastPts: 10, lastPos: 5, bestLapMs: 62960, races: 8, wins: 1, podiums: 4 },
-  { id: 'p5', driver: 'G. Costa',     team: 'Pista Azzurra',           points: 162, lastPts: 15, lastPos: 3, bestLapMs: 62110, races: 9, wins: 0, podiums: 3 },
-  { id: 'p6', driver: 'S. Marchetti', team: 'Kartodromo Val Vibrata',  points: 149, lastPts: 6,  lastPos: 7, bestLapMs: 63400, races: 7, wins: 0, podiums: 2 },
-  { id: 'p7', driver: 'F. Greco',     team: '7 Laghi Kart',            points: 121, lastPts: 8,  lastPos: 6, bestLapMs: 62740, races: 8, wins: 0, podiums: 1 },
-  { id: 'p8', driver: 'R. Neri',      team: 'South Garda Karting',     points: 98,  lastPts: 4,  lastPos: 8, bestLapMs: 63980, races: 6, wins: 0, podiums: 0 },
-];
-
-const VIEWS = [
-  { key: 'general', label: 'Classifica generale' },
-  { key: 'last',    label: 'Ultima gara' },
-  { key: 'bestlap', label: 'Best lap' },
-];
-
-// Millisecondi -> M:SS.mmm (formato tempi RKC / Apex Timing).
-function formatLap(ms) {
-  const m = Math.floor(ms / 60000);
-  const s = Math.floor((ms % 60000) / 1000);
-  const millis = ms % 1000;
-  return `${m}:${String(s).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
-}
-
 function RkcAsi() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [selectedRegion, setSelectedRegion] = useState(null);
-  const [view, setView] = useState('general');
-  const [selectedDriverId, setSelectedDriverId] = useState(null);
   const tabsRef = useRef(null);
 
   useEffect(() => {
@@ -79,32 +48,6 @@ function RkcAsi() {
     return events.filter(e => e.region === selectedRegion);
   }, [events, selectedRegion]);
 
-  // Classifica ordinata secondo la vista attiva. La posizione e sempre l'indice
-  // nell'ordinamento corrente, cosi il toggle rimescola visibilmente le righe.
-  const rankedRows = useMemo(() => {
-    const arr = [...MOCK_LEADERBOARD];
-    if (view === 'general') arr.sort((a, b) => b.points - a.points);
-    else if (view === 'last') arr.sort((a, b) => a.lastPos - b.lastPos);
-    else arr.sort((a, b) => a.bestLapMs - b.bestLapMs);
-
-    return arr.map((d, i) => {
-      let value, label, isLap = false;
-      if (view === 'general') { value = d.points; label = 'PTS'; }
-      else if (view === 'last') { value = d.lastPts; label = 'PTS · ULTIMA'; }
-      else { value = formatLap(d.bestLapMs); label = 'BEST LAP'; isLap = true; }
-      return { ...d, pos: i + 1, value, label, isLap };
-    });
-  }, [view]);
-
-  // Posizione in classifica generale per il pannello dettaglio (indipendente dalla vista).
-  const generalRank = useMemo(() => {
-    const map = {};
-    [...MOCK_LEADERBOARD].sort((a, b) => b.points - a.points).forEach((d, i) => { map[d.id] = i + 1; });
-    return map;
-  }, []);
-
-  const selectedDriver = MOCK_LEADERBOARD.find(d => d.id === selectedDriverId) || null;
-
   const scrollTabs = (direction) => {
     if (tabsRef.current) {
       const amount = 220;
@@ -113,7 +56,6 @@ function RkcAsi() {
   };
 
   const handleSelectRegion = (name) => setSelectedRegion(prev => (prev === name ? null : name));
-  const toggleDriver = (id) => setSelectedDriverId(prev => (prev === id ? null : id));
 
   return (
     <div className="rkc-page">
@@ -131,8 +73,8 @@ function RkcAsi() {
           </SectionEyebrow>
           <h1 className="rkc-title">RKC <em>ASI</em></h1>
           <p className="rkc-subtitle">
-            Il campionato di rental karting verso le finali nazionali ASI. Segui la classifica gara
-            dopo gara, i migliori giri e il calendario delle tappe nella tua regione.
+            Il campionato di rental karting verso le finali nazionali ASI. Qui trovi il calendario
+            delle tappe regione per regione; classifica e migliori giri arriveranno a stagione avviata.
           </p>
           <div className="rkc-hero-stats">
             <div className="rkc-stat"><b>{loading ? '—' : events.length}</b><span>Tappe in calendario</span></div>
@@ -142,74 +84,21 @@ function RkcAsi() {
         </div>
       </HudFrame>
 
-      {/* ---------- BOARD CAMPIONATO (mock) ---------- */}
+      {/* ---------- CLASSIFICA (placeholder: nessun dato reale) ----------
+           Il board e il pannello dettaglio pilota vivevano su un set di piloti
+           inventati: rimossi. Le classi .rkc-board/.rkc-row/.rkc-detail/.rkc-tile
+           restano in index.css perche' le usano EventDetails e Dashboard, quindi
+           quando ci saranno risultati veri da race_results il markup si rimonta
+           uguale. */}
       <section className="rkc-section container">
         <div className="rkc-section-head">
           <div>
             <SectionEyebrow className="rkc-section-eyebrow">Standing di campionato</SectionEyebrow>
             <h2 className="rkc-section-title">Classifica</h2>
           </div>
-          <div className="rkc-toggle" role="tablist" aria-label="Vista classifica">
-            {VIEWS.map(v => (
-              <button
-                key={v.key}
-                role="tab"
-                aria-selected={view === v.key}
-                className={`rkc-toggle-btn ${view === v.key ? 'active' : ''}`.trim()}
-                onClick={() => setView(v.key)}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
         </div>
 
-        <div className="rkc-board" key={view}>
-          {rankedRows.map(r => (
-            <button
-              key={r.id}
-              className={`rkc-row ${selectedDriverId === r.id ? 'selected' : ''}`.trim()}
-              onClick={() => toggleDriver(r.id)}
-              aria-expanded={selectedDriverId === r.id}
-            >
-              <span className="rkc-pos">{r.pos}</span>
-              <span className="rkc-drv">
-                {r.driver}
-                <small>{r.team}</small>
-              </span>
-              <span className={`rkc-val ${r.isLap ? 'is-lap' : ''}`.trim()}>
-                {r.value}
-                <small>{r.label}</small>
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {selectedDriver && (
-          <HudFrame className="rkc-detail" corners={['tl', 'br']}>
-            <div className="rkc-detail-head">
-              <div>
-                <div className="rkc-detail-name">{selectedDriver.driver}</div>
-                <div className="rkc-detail-team">{selectedDriver.team}</div>
-              </div>
-              <button className="rkc-detail-close" onClick={() => setSelectedDriverId(null)} aria-label="Chiudi dettaglio pilota">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="rkc-detail-grid">
-              <div className="rkc-tile"><b>#{generalRank[selectedDriver.id]}</b><span>Posizione</span></div>
-              <div className="rkc-tile"><b>{selectedDriver.points}</b><span>Punti</span></div>
-              <div className="rkc-tile"><b>{selectedDriver.races}</b><span>Gare</span></div>
-              <div className="rkc-tile"><b>{selectedDriver.wins}</b><span>Vittorie</span></div>
-              <div className="rkc-tile"><b>{selectedDriver.podiums}</b><span>Podi</span></div>
-              <div className="rkc-tile is-lap"><b>{formatLap(selectedDriver.bestLapMs)}</b><span>Miglior giro</span></div>
-            </div>
-          </HudFrame>
-        )}
-
-        <p className="rkc-mock-note">
-          // Dati dimostrativi — la classifica ufficiale sarà popolata dai risultati reali a stagione avviata
-        </p>
+        <div className="khub-board-soon">// CLASSIFICA CAMPIONATO — DATI IN ARRIVO A STAGIONE AVVIATA</div>
       </section>
 
       {/* ---------- CALENDARIO TAPPE (dati reali per regione) ---------- */}
