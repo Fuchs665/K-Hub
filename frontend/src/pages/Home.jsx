@@ -17,15 +17,6 @@ const MENU_ITEMS = [
   { label: 'Area Organizzatori', to: '/organizer' },
 ];
 
-// Classifica MOCK: stessa forma dei futuri record (pos/pilota/team/punti) così
-// lo switch ai dati reali da race_results sarà indolore (brief §4).
-const MOCK_STANDINGS = [
-  { pos: 1, driver: 'M. Rossi', team: 'SCUDERIA CREMONA', points: 218 },
-  { pos: 2, driver: 'L. Bianchi', team: 'KART TEAM LAZIO', points: 205 },
-  { pos: 3, driver: 'D. Furchia', team: 'RKC MILANO', points: 197 },
-  { pos: 4, driver: 'A. Verdi', team: 'SODI RACING', points: 184 },
-];
-
 function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
@@ -54,7 +45,8 @@ function Home() {
   const trTxt = stats.tracks != null ? stats.tracks : '—';
 
   // Pannelli contestuali (uno per voce di menu). L'eyebrow del calendario usa
-  // i conteggi reali; il board RKC usa MOCK_STANDINGS.
+  // i conteggi reali; il pannello RKC mostra un placeholder finché non ci sono
+  // classifiche vere da race_results.
   const panels = [
     {
       eyebrow: `${evTxt} eventi · ${trTxt} piste`,
@@ -65,7 +57,7 @@ function Home() {
       eyebrow: 'Rental Kart Championship — ASI',
       title: <>Classifica<br />campionato</>,
       body: 'Il board interattivo del campionato: standing live, best lap e distacchi, aggiornati gara dopo gara.',
-      board: true,
+      boardSoon: true,
     },
     {
       eyebrow: 'Directory circuiti',
@@ -73,7 +65,7 @@ function Home() {
       body: 'Mappa interattiva dei kartodromi: regolamenti, layout, tipi di kart e link diretti. Scegli dove correre.',
     },
     {
-      eyebrow: 'Telemetria personale · powered by Racesense',
+      eyebrow: 'Telemetria personale · in arrivo',
       title: <>Il tuo<br />profilo pilota</>,
       body: (
         <>
@@ -123,22 +115,8 @@ function Home() {
                 <SectionEyebrow className="khub-eyebrow">{p.eyebrow}</SectionEyebrow>
                 <h2 className="khub-card-title">{p.title}</h2>
                 <p className="khub-card-body">{p.body}</p>
-                {p.board && (
-                  <div className="khub-board" key={activeIndex}>
-                    {MOCK_STANDINGS.map((s) => (
-                      <div className="khub-row" key={s.pos}>
-                        <span className="khub-pos">{s.pos}</span>
-                        <span className="khub-drv">
-                          {s.driver}
-                          <small>{s.team}</small>
-                        </span>
-                        <span className="khub-pts">
-                          {s.points}
-                          <span>PTS</span>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                {p.boardSoon && (
+                  <div className="khub-board-soon">// CLASSIFICA CAMPIONATO — DATI IN ARRIVO</div>
                 )}
               </div>
             </section>

@@ -1392,7 +1392,22 @@ h1, h2, h3, h4 {
 .khub-lap { font-family: var(--font-hud); color: var(--accent2); font-weight: 700; }
 
 /* Board classifica (mock) — righe in cascata */
+/* .khub-board e le sue righe restano definite ma non sono montate da nessuna
+   pagina: la Home mostra .khub-board-soon finché non ci sono classifiche reali
+   da race_results, poi questo markup torna utile invariato. */
 .khub-board { margin-top: 22px; display: flex; flex-direction: column; gap: 8px; }
+
+.khub-board-soon {
+  margin-top: 22px;
+  padding: 22px 16px;
+  border: 1px dashed var(--line-strong);
+  background: rgba(255, 255, 255, 0.02);
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-align: center;
+}
 
 .khub-row {
   display: grid;
