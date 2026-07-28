@@ -45,9 +45,25 @@ body {
 }
 
 h1, h2, h3, h4 {
-  text-transform: uppercase;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+/* Il maiuscolo NON e' piu' globale sugli heading: rendeva illeggibili i
+   titoli di contenuto reale (nomi gara scrapeati, nomi pista). Resta solo
+   sulle label/etichette di chrome, elencate qui come punto unico di audit
+   (alcune lo ridichiarano nella propria regola). */
+.khub-brand-k,
+.rkc-title,
+.rkc-hero-eyebrow,
+.rkc-section-eyebrow,
+.khub-eyebrow,
+.tag,
+.khub-event-tag,
+.khub-hud-top,
+.btn-snappy,
+.btn-outline-snappy {
+  text-transform: uppercase;
 }
 
 .font-mono {
@@ -1514,13 +1530,14 @@ h1, h2, h3, h4 {
 
 .khub-event-date { font-family: var(--font-hud); font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
 
+/* Niente uppercase: qui ci finiscono titoli gara reali e nomi pista, che in
+   maiuscolo su due righe diventano illeggibili. */
 .khub-event-title {
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 800;
   font-size: 1.25rem;
   line-height: 1.05;
-  text-transform: uppercase;
 }
 
 .khub-event-track {

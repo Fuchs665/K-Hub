@@ -86,7 +86,9 @@ function EventDetails() {
             <ChevronLeft size={16} /> Torna al Calendario
           </Link>
           <SectionEyebrow className="rkc-hero-eyebrow">Scheda Evento</SectionEyebrow>
-          <h1 className="rkc-title">{event.title}</h1>
+          {/* Unica .rkc-title che porta contenuto reale invece di una label statica:
+              il nome gara scrapeato in maiuscolo a 104px e' illeggibile. */}
+          <h1 className="rkc-title" style={{ textTransform: 'none' }}>{event.title}</h1>
 
           <div className="evt-meta">
             <span className="evt-meta-item"><MapPin size={16} /> {event.track_name}</span>
