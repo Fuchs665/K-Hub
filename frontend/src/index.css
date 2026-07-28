@@ -20,7 +20,9 @@
   --muted: #7d858e;                  /* testo secondario / label */
   --accent: #e4002b;                 /* ROSSO CORSA — azioni primarie */
   --accent2: #b4ff2e;                /* VERDE LIME TELEMETRIA — dati/tech */
-  --line: rgba(255, 255, 255, 0.08); /* bordi/griglie */
+  --accent-ink: #ff3355;             /* rosso per testo piccolo, contrasto AA */
+  --line: rgba(255, 255, 255, 0.08); /* divisori interni */
+  --line-strong: rgba(255, 255, 255, 0.16); /* bordi dei contenitori principali */
   --panel: rgba(255, 255, 255, 0.03);/* pannelli glass */
 
   /* Famiglie tipografiche del redesign (font caricati in index.html) */
@@ -882,7 +884,7 @@ h1, h2, h3, h4 {
   min-height: 92px;
   padding: 6px;
   background: var(--bg2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   text-align: left;
   font-family: inherit;
   color: var(--ink);
@@ -1500,7 +1502,7 @@ h1, h2, h3, h4 {
   gap: 10px;
   padding: 20px;
   background: var(--bg2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-left: 4px solid var(--accent);
   text-decoration: none;
   color: var(--ink);
@@ -1874,7 +1876,7 @@ h1, h2, h3, h4 {
   gap: 10px;
   padding: 20px;
   background: var(--bg2);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-left: 4px solid var(--accent);
   color: var(--ink);
   clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
