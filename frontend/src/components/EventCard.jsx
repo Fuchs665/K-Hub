@@ -27,15 +27,17 @@ function EventCard({ event }) {
       </div>
 
       <div className="cal-event-actions">
-        <Link to={`/event/${event.id}`} className="cal-btn is-primary">
+        <Link to={`/event/${event.id}`} className="cal-btn">
           <Trophy size={14} /> Classifica & Tempi
         </Link>
+        {/* L'iscrizione e' l'azione primaria: e' il click che vale per i
+            kartodromi. Ordine invariato, cambia solo la gerarchia visiva. */}
         {event.source_url && (
           <a
             href={event.source_url}
             target="_blank"
             rel="noreferrer"
-            className="cal-btn"
+            className="cal-btn is-primary"
           >
             Dettagli & Iscrizione <ChevronRight size={14} />
           </a>
