@@ -37,28 +37,13 @@
   padding: 0;
 }
 
-@keyframes moveStripes {
-  0% { background-position: 0 0; }
-  100% { background-position: 56px 56px; }
-}
-
 body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-light);
-  color: var(--text-main);
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(227, 24, 55, 0.03) 0,
-    rgba(227, 24, 55, 0.03) 2px,
-    transparent 2px,
-    transparent 8px
-  );
-  background-size: 11px 11px;
-  animation: moveStripes 20s linear infinite;
-  background-attachment: fixed;
 }
 
 h1, h2, h3, h4 {
