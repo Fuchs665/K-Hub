@@ -2050,8 +2050,8 @@ h1, h2, h3, h4 {
    DASHBOARD PILOTA — migrazione dark (sezione 5 brief).
    Riusa shell rkc-page, hero rkc-, tile rkc-tile per i KPI e la
    tipografia rkc-pos / rkc-drv / rkc-val nello storico gare.
-   Include il blocco Telemetria placeholder per il futuro import
-   Racesense (campo source nei lap_times).
+   Include il blocco Telemetria placeholder: nessuna integrazione di
+   cronometraggio attiva, e lap_times non ha ancora un campo source.
    ============================================================ */
 .dsh-hero {
   min-height: 28vh;
@@ -2127,7 +2127,7 @@ h1, h2, h3, h4 {
 }
 .dsh-bar.is-podium { background: var(--accent2); }
 
-/* Blocco telemetria: placeholder per il futuro import Racesense */
+/* Blocco telemetria: placeholder, nessuna integrazione attiva */
 .dsh-telemetry {
   background: var(--panel);
   border: 1px solid var(--line);

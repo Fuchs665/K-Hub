@@ -133,19 +133,18 @@ function Dashboard() {
           </div>
         )}
 
-        {/* ---------- Telemetria (placeholder import Racesense) ---------- */}
+        {/* ---------- Telemetria (placeholder: nessuna integrazione attiva) ---------- */}
         <HudFrame className="dsh-telemetry" corners={['tl', 'br']}>
           <SectionEyebrow as="div" className="rkc-section-eyebrow">
             Telemetria
           </SectionEyebrow>
           <p className="dsh-telemetry-text">
-            In arrivo: import automatico dei tempi sul giro da Racesense.
-            I giri registrati appariranno qui con la loro sorgente.
+            Oggi i tempi sul giro si inseriscono a mano dall'area organizzatori.
+            L'import automatico da servizi di cronometraggio è in valutazione.
           </p>
           <div className="dsh-telemetry-sources">
             <span className="dsh-source is-live">Manuale — attiva</span>
-            <span className="dsh-source">Racesense</span>
-            <span className="dsh-source">Telemetria</span>
+            <span className="dsh-source">Import automatico</span>
           </div>
         </HudFrame>
 
