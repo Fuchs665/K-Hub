@@ -1,27 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Flag, X, List, CalendarDays, SlidersHorizontal, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getEvents } from '../lib/eventsRepository';
 import { ITALIAN_REGIONS } from '../lib/constants';
 import { parseEventDate, formatEventDate } from '../lib/format';
+import { startOfDay, toIsoDate, groupEventsByBucket } from '../lib/eventBuckets';
 import EventCard, { EventCardSkeleton } from '../components/EventCard';
 import HudFrame from '../components/HudFrame';
 import SectionEyebrow from '../components/SectionEyebrow';
 
 const PAGE_SIZE = 20;
 const MONTH_FETCH_SIZE = 1000; // vista mese: prende tutti gli eventi filtrati, raggruppati client-side per giorno
-const ITALIAN_MONTHS = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-
-function startOfDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function toIsoDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
 
 function buildFilterParams({ filterRegion, filterType, filterKart, filterFormat }) {
   return {
@@ -30,56 +20,6 @@ function buildFilterParams({ filterRegion, filterType, filterKart, filterFormat 
     engineType: filterKart,
     format: filterFormat === 'CAMPIONATO' ? 'campionato' : (filterFormat === 'GARA SINGOLA' ? 'gara_singola' : 'ALL'),
   };
-}
-
-// Bucket relativi a oggi: passato / oggi / weekend / prossima settimana / questo mese / mese successivo / più avanti.
-function getEventBucket(event, today) {
-  const date = parseEventDate(event.event_date);
-  if (!date) return 'Più avanti';
-  const day = startOfDay(date);
-  const diffDays = Math.round((day - today) / 86400000);
-
-  if (diffDays < 0) return 'Eventi passati';
-  if (diffDays === 0) return 'Oggi';
-
-  const weekday = today.getDay(); // 0=Dom..6=Sab
-  const mondayOffset = weekday === 0 ? -6 : 1 - weekday;
-  const thisMonday = new Date(today);
-  thisMonday.setDate(today.getDate() + mondayOffset);
-  const thisSaturday = new Date(thisMonday);
-  thisSaturday.setDate(thisMonday.getDate() + 5);
-  const thisSunday = new Date(thisMonday);
-  thisSunday.setDate(thisMonday.getDate() + 6);
-  const nextMonday = new Date(thisMonday);
-  nextMonday.setDate(thisMonday.getDate() + 7);
-  const nextSunday = new Date(thisMonday);
-  nextSunday.setDate(thisMonday.getDate() + 13);
-
-  if (day >= thisSaturday && day <= thisSunday) return 'Questo weekend';
-  if (day >= nextMonday && day <= nextSunday) return 'Prossima settimana';
-  if (day.getFullYear() === today.getFullYear() && day.getMonth() === today.getMonth()) return 'Questo mese';
-
-  const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-  if (day.getFullYear() === nextMonthDate.getFullYear() && day.getMonth() === nextMonthDate.getMonth()) {
-    return ITALIAN_MONTHS[nextMonthDate.getMonth()];
-  }
-
-  return 'Più avanti';
-}
-
-function groupEventsByBucket(events) {
-  const today = startOfDay(new Date());
-  const nextMonthLabel = ITALIAN_MONTHS[(today.getMonth() + 1) % 12];
-  const order = ['Eventi passati', 'Oggi', 'Questo weekend', 'Prossima settimana', 'Questo mese', nextMonthLabel, 'Più avanti'];
-
-  const buckets = new Map();
-  for (const event of events) {
-    const key = getEventBucket(event, today);
-    if (!buckets.has(key)) buckets.set(key, []);
-    buckets.get(key).push(event);
-  }
-
-  return order.filter(key => buckets.has(key)).map(key => ({ label: key, events: buckets.get(key) }));
 }
 
 // Griglia mese (Lun→Dom) con celle di padding per allineare la settimana.
@@ -106,6 +46,8 @@ function buildMonthMatrix(monthCursor, eventsByDay) {
 }
 
 function Calendar() {
+  // Filtri iniziali dalla ricerca della Home: /calendar?regione=Lombardia&formato=Sprint
+  const [searchParams] = useSearchParams();
   const [view, setView] = useState('list'); // 'list' | 'month'
 
   // Vista lista
@@ -123,11 +65,11 @@ function Calendar() {
   const [selectedDay, setSelectedDay] = useState(null);
 
   // Filtri
-  const [filterType, setFilterType] = useState('ALL');
+  const [filterType, setFilterType] = useState(() => searchParams.get('formato') || 'ALL');
   const [filterKart, setFilterKart] = useState('ALL');
   const [filterFormat, setFilterFormat] = useState('ALL');
-  const [filterRegion, setFilterRegion] = useState('ALL');
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [filterRegion, setFilterRegion] = useState(() => searchParams.get('regione') || 'ALL');
+  const [showAdvanced, setShowAdvanced] = useState(() => Boolean(searchParams.get('regione')));
 
   useEffect(() => {
     fetchEvents();
