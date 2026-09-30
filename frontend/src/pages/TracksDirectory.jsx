@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getTracks } from '../lib/tracksRepository';
+import { trackPath } from '../lib/tracks';
 import ItalyMap from '../components/ItalyMap';
-import { MapPin, Globe, ExternalLink, X } from 'lucide-react';
+import { MapPin, Globe, X } from 'lucide-react';
 import HudFrame from '../components/HudFrame';
 import SectionEyebrow from '../components/SectionEyebrow';
 
@@ -115,7 +117,7 @@ function TracksDirectory() {
                 <div className="tracks-grid">
                   {visibleTracks.map(track => (
                     <article key={track.id} className="rkc-card trk-card">
-                      <h3 className="khub-event-title">{track.name}</h3>
+                      <h3 className="khub-event-title"><Link to={trackPath(track.name)}>{track.name}</Link></h3>
 
                       <div className="cal-event-info">
                         <span className="khub-event-track">
@@ -137,14 +139,9 @@ function TracksDirectory() {
                       </p>
 
                       <div className="cal-event-actions">
-                        <a
-                          href={track.website || '#'}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="cal-btn is-primary"
-                        >
-                          Prenota Sessione <ExternalLink size={14} />
-                        </a>
+                        <Link to={trackPath(track.name)} className="cal-btn is-primary">
+                          Scheda della pista
+                        </Link>
                       </div>
                     </article>
                   ))}

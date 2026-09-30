@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import Navbar from './components/Navbar';
+import SiteHeader from './components/kh/SiteHeader';
+import SiteFooter from './components/kh/SiteFooter';
 import Home from './pages/Home';
 import Calendar from './pages/Calendar';
 import TracksDirectory from './pages/TracksDirectory';
+import Track from './pages/Track';
 import RkcAsi from './pages/RkcAsi';
 import OrganizerDashboard from './pages/OrganizerDashboard';
 import Auth from './pages/Auth';
@@ -12,6 +15,13 @@ import Dashboard from './pages/Dashboard';
 import EventDetails from './pages/EventDetails';
 import GuidaRental from './pages/GuidaRental';
 import './index.css';
+import './styles/manifesto.css';
+
+// Pagine già migrate alla direzione Manifesto (design system K-Hub): usano
+// testata e piè di pagina nuovi e lo stile di styles/manifesto.css. Le altre
+// restano sul vecchio tema scuro finché non vengono ridisegnate, una alla volta.
+const MANIFESTO_ROUTES = [/^\/$/, /^\/piste\/[^/]+\/?$/];
+const DEFAULT_TITLE = 'K-Hub — Rental Karting Italia';
 
 /**
  * Transizioni di route con Framer Motion — solo animazione d'ENTRATA.
@@ -38,6 +48,7 @@ function AnimatedRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/tracks" element={<TracksDirectory />} />
+        <Route path="/piste/:slug" element={<Track />} />
         <Route path="/rkc-asi" element={<RkcAsi />} />
         <Route path="/organizer" element={<OrganizerDashboard />} />
         <Route path="/auth" element={<Auth />} />
@@ -49,11 +60,44 @@ function AnimatedRoutes() {
   );
 }
 
+function Shell() {
+  const { pathname, hash } = useLocation();
+  const manifesto = MANIFESTO_ROUTES.some((r) => r.test(pathname));
+
+  // Ogni nuova pagina parte dall'alto (salvo link a un'ancora).
+  useEffect(() => {
+    if (!hash) window.scrollTo(0, 0);
+  }, [pathname, hash]);
+
+  useEffect(() => {
+    document.body.classList.toggle('kh-body', manifesto);
+    if (!manifesto) document.title = DEFAULT_TITLE;
+  }, [manifesto, pathname]);
+
+  if (manifesto) {
+    return (
+      <div className="kh-theme">
+        <SiteHeader />
+        <main className="kh-main">
+          <AnimatedRoutes />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <AnimatedRoutes />
+    </>
+  );
+}
+
 function App() {
   return (
     <Router>
-      <Navbar />
-      <AnimatedRoutes />
+      <Shell />
     </Router>
   );
 }
