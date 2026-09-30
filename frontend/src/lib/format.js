@@ -43,3 +43,24 @@ export function generateCalendarLink(event) {
   const details = event.source_url ? `Iscrizione: ${event.source_url}` : 'Evento karting da K-Hub';
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}${dates}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(event.track_name ?? '')}`;
 }
+
+const longDateFormatter = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+// 'Giovedì 1 ottobre 2026'
+export function formatLongDate(dateStr) {
+  const date = parseEventDate(dateStr);
+  if (!date) return dateStr ?? '';
+  const s = longDateFormatter.format(date);
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Parti della targa data: { day: '01', month: 'ott', weekday: 'gio' }.
+export function datePlateParts(dateStr) {
+  const date = parseEventDate(dateStr);
+  if (!date) return null;
+  return {
+    day: String(date.getDate()).padStart(2, '0'),
+    month: date.toLocaleDateString('it-IT', { month: 'short' }).replace('.', ''),
+    weekday: date.toLocaleDateString('it-IT', { weekday: 'short' }).replace('.', ''),
+  };
+}

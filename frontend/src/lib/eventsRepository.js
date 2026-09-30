@@ -154,3 +154,36 @@ export async function getEventLapTimes(eventId) {
   setCached(cacheKey, data || []);
   return data || [];
 }
+
+// Gare su una pista. Il nome della gara deve iniziare con uno dei nomi della
+// pista, senza distinzione di maiuscole: le fonti a volte aggiungono un
+// suffisso ("La Scaglia" -> "La Scaglia Circuit 2.0"). Una pista può avere più
+// nomi (vedi data/trackLayouts.js): una query per nome, poi unione.
+// when: 'upcoming' (da oggi, crescenti) o 'past' (decrescenti).
+export async function getEventsAtTrack(trackNames, { when = 'upcoming', limit = 20 } = {}) {
+  const names = [...new Set(trackNames.filter(Boolean))];
+  if (names.length === 0) return [];
+  const cacheKey = `events:track:${when}:${limit}:${names.join('|')}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const past = when === 'past';
+  const results = await Promise.all(names.map(async (name) => {
+    const pattern = `${name.replace(/[\\%_]/g, '\\$&')}%`;
+    let query = supabase.from('events').select('*').ilike('track_name', pattern);
+    query = past
+      ? query.lt('event_date', today).order('event_date', { ascending: false })
+      : query.gte('event_date', today).order('event_date', { ascending: true });
+    const { data, error } = await query.limit(limit);
+    if (error) throw error;
+    return data || [];
+  }));
+
+  const byId = new Map(results.flat().map((ev) => [ev.id, ev]));
+  const events = [...byId.values()]
+    .sort((a, b) => (past ? b.event_date.localeCompare(a.event_date) : a.event_date.localeCompare(b.event_date)))
+    .slice(0, limit);
+  setCached(cacheKey, events);
+  return events;
+}

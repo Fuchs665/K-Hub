@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { getCached, setCached } from './cache';
+import { slugify } from './tracks';
 
 export async function getTracks() {
   const cacheKey = 'tracks:all';
@@ -30,4 +31,10 @@ export async function getTracksCount() {
   if (error) throw error;
   setCached(cacheKey, count ?? 0, 5 * 60_000);
   return count ?? 0;
+}
+
+// Le piste non hanno uno slug in DB: lo deriviamo dal nome (tabella piccola, già in cache).
+export async function getTrackBySlug(slug) {
+  const tracks = await getTracks();
+  return tracks.find((t) => slugify(t.name) === slug) ?? null;
 }
