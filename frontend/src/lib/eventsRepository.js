@@ -3,25 +3,36 @@ import { getCached, setCached, clearCached } from './cache';
 
 const PAGE_SIZE = 20;
 
+// when: 'upcoming' (da oggi, crescenti), 'past' (prima di oggi, decrescenti) o
+// 'all' (crescenti). from/to: intervallo di date 'YYYY-MM-DD' incluso (vista mese).
+// eventType corrisponde anche ai formati misti: 'Sprint' trova 'Sprint/Endurance'.
 export async function getEvents({
   region = 'ALL',
   eventType = 'ALL',
   engineType = 'ALL',
   format = 'ALL',
+  when = 'all',
+  from: fromDate,
+  to: toDate,
   page = 1,
   pageSize = PAGE_SIZE,
 } = {}) {
-  const cacheKey = `events:${region}:${eventType}:${engineType}:${format}:${page}:${pageSize}`;
+  const cacheKey = `events:${region}:${eventType}:${engineType}:${format}:${when}:${fromDate}:${toDate}:${page}:${pageSize}`;
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
+  const today = new Date().toISOString().slice(0, 10);
   let query = supabase
     .from('events')
     .select('*', { count: 'exact' })
-    .order('event_date', { ascending: true });
+    .order('event_date', { ascending: when !== 'past' });
 
+  if (when === 'upcoming') query = query.gte('event_date', today);
+  if (when === 'past') query = query.lt('event_date', today);
+  if (fromDate) query = query.gte('event_date', fromDate);
+  if (toDate) query = query.lte('event_date', toDate);
   if (region !== 'ALL') query = query.eq('region', region);
-  if (eventType !== 'ALL') query = query.eq('event_type', eventType);
+  if (eventType !== 'ALL') query = query.ilike('event_type', `%${eventType}%`);
   if (engineType !== 'ALL') query = query.eq('engine_type', engineType);
   if (format !== 'ALL') query = query.eq('format', format);
 
@@ -186,4 +197,21 @@ export async function getEventsAtTrack(trackNames, { when = 'upcoming', limit = 
     .slice(0, limit);
   setCached(cacheKey, events);
   return events;
+}
+
+// Valori realmente presenti nei dati, per i filtri del calendario (tabella
+// piccola: due colonne di tutte le gare, in cache 5 minuti).
+export async function getEventFacets() {
+  const cacheKey = 'events:facets';
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const { data, error } = await supabase.from('events').select('region, engine_type');
+  if (error) throw error;
+
+  const uniq = (key) => [...new Set((data || []).map((r) => r[key]).filter((v) => v && v !== 'N/D'))]
+    .sort((a, b) => a.localeCompare(b, 'it'));
+  const facets = { regions: uniq('region'), engineTypes: uniq('engine_type') };
+  setCached(cacheKey, facets, 5 * 60_000);
+  return facets;
 }

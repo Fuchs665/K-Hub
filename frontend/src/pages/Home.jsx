@@ -185,7 +185,7 @@ function Home() {
               <Link to="/calendar" className="kh-link-accent">Guarda il calendario completo</Link>
             </div>
           )}
-          <EventGroups groups={groups} />
+          <EventGroups groups={groups} register />
         </div>
       </section>
 
