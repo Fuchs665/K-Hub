@@ -1,35 +1,8 @@
 import html
-import re
 from toolkit.http import HttpClient, RateLimiter, RetryConfig
-from scraper_base import KartingEvent, PROVINCE_TO_REGION, load_track_regions
+from scraper_base import KartingEvent, load_track_regions, resolve_physical_region
 
 API_URL = "https://www.rkcasikarting.it/wp-json/tribe/events/v1/events"
-
-
-def resolve_physical_region(venue_name, address, track_regions):
-    """Regione FISICA della pista, per coerenza con Calendar/TracksDirectory.
-    Deliberatamente NON usa il titolo dell'evento: RKC ASI nomina i gironi
-    regionali come "RKC ASI Toscana" anche per tappe giocate fisicamente in
-    un'altra regione (es. Misanino/Pomposa, Emilia-Romagna), quindi un match
-    sul titolo "contaminerebbe" la region fisica condivisa col resto dell'app.
-    1. match sulla tabella tracks (nome pista esatto o come sottostringa,
-       i nomi RKC ASI hanno spesso suffissi tipo "Circuit"/"Kart" in piu');
-    2. sigla provincia in fondo all'indirizzo (es. "... 44022 San Giuseppe FE").
-    None se non determinabile: dato incompleto ammesso, resta a resolve_region
-    generico (su titolo) in insert_events_to_supabase come ultima spiaggia."""
-    key = (venue_name or "").strip().lower()
-    if key:
-        for name, region in track_regions.items():
-            if name in key or key in name:
-                return region
-
-    code_match = re.search(r'\b([A-Z]{2})$', (address or "").strip())
-    if code_match:
-        region = PROVINCE_TO_REGION.get(code_match.group(1))
-        if region:
-            return region
-
-    return None
 
 
 def resolve_event_type(title, category_names):

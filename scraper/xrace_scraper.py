@@ -1,7 +1,46 @@
-from datetime import datetime
+from datetime import date, datetime, timedelta
 import re
 from toolkit.http import HttpClient, RateLimiter, RetryConfig
 from scraper_base import KartingEvent
+
+MONTHS_IT = {
+    'gennaio': '01', 'gen': '01',
+    'febbraio': '02', 'feb': '02',
+    'marzo': '03', 'mar': '03',
+    'aprile': '04', 'apr': '04',
+    'maggio': '05', 'mag': '05',
+    'giugno': '06', 'giu': '06',
+    'luglio': '07', 'lug': '07',
+    'agosto': '08', 'ago': '08',
+    'settembre': '09', 'set': '09',
+    'ottobre': '10', 'ott': '10',
+    'novembre': '11', 'nov': '11',
+    'dicembre': '12', 'dic': '12'
+}
+
+def parse_title_date(title, published_at):
+    """Data dal titolo ("... - 18 Ottobre ..."). L'anno non c'e': si parte da
+    quello di pubblicazione del prodotto e, se la data cadrebbe parecchio PRIMA
+    della pubblicazione, e' la stagione dopo (es. pubblicato a dicembre per
+    una gara di gennaio)."""
+    match = re.search(r'(\d{1,2})\s*[-/]?\s*([a-zA-Z]+)', title)
+    if not match:
+        return None
+    month = MONTHS_IT.get(match.group(2).lower())
+    if not month:
+        return None
+    try:
+        published = datetime.fromisoformat((published_at or '')[:10]).date()
+    except ValueError:
+        published = date.today()
+    try:
+        candidate = date(published.year, int(month), int(match.group(1)))
+        if candidate < published - timedelta(days=60):
+            candidate = candidate.replace(year=published.year + 1)
+    except ValueError:
+        return None  # giorno impossibile (es. 31 novembre)
+    return candidate
+
 
 def scrape_xrace_events():
     url = "https://xracemotorsport.com/products.json?limit=250"
@@ -24,25 +63,9 @@ def scrape_xrace_events():
 
     events = []
     
-    months_it = {
-        'gennaio': '01', 'gen': '01',
-        'febbraio': '02', 'feb': '02',
-        'marzo': '03', 'mar': '03',
-        'aprile': '04', 'apr': '04',
-        'maggio': '05', 'mag': '05',
-        'giugno': '06', 'giu': '06',
-        'luglio': '07', 'lug': '07',
-        'agosto': '08', 'ago': '08',
-        'settembre': '09', 'set': '09',
-        'ottobre': '10', 'ott': '10',
-        'novembre': '11', 'nov': '11',
-        'dicembre': '12', 'dic': '12'
-    }
 
     products = data.get('products', [])
     print(f"Trovati {len(products)} prodotti su XRace.")
-
-    current_year = datetime.now().year
 
     for p in products:
         title = p.get('title', '')
@@ -61,15 +84,13 @@ def scrape_xrace_events():
             except:
                 price = "€" + str(variants[0].get('price', 'N/D'))
 
-        date_match = re.search(r'(\d{1,2})\s*[-/]?\s*([a-zA-Z]+)', title)
-        event_date_str = f"{current_year}-12-31" # fallback
-        
-        if date_match:
-            day = date_match.group(1).zfill(2)
-            month_word = date_match.group(2).lower()
-            month_num = months_it.get(month_word)
-            if month_num:
-                event_date_str = f"{current_year}-{month_num}-{day}"
+        # Il titolo riporta solo giorno e mese ("... - 18 Ottobre (Villarosa)"): senza
+        # data riconoscibile (campionati, pacchetti stagionali) non e' una gara a
+        # calendario e viene saltato, invece di finire al 31/12 come prima.
+        event_date = parse_title_date(title, p.get('published_at'))
+        if event_date is None:
+            continue
+        event_date_str = event_date.isoformat()
 
         # Estrai la pista dalle parentesi se presente
         track_match = re.search(r'\((.*?)\)', title)

@@ -1,6 +1,7 @@
 import os
 import re
-from datetime import datetime
+from datetime import date, datetime
+from urllib.parse import urlparse
 # pyrefly: ignore [missing-import]
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -158,11 +159,110 @@ def resolve_region(track_name, title, track_regions):
 
     return None
 
+def resolve_physical_region(venue_name, address, track_regions):
+    """Regione FISICA della pista, per coerenza con Calendar/TracksDirectory.
+    Deliberatamente NON usa il titolo dell'evento: RKC ASI nomina i gironi
+    regionali come "RKC ASI Toscana" anche per tappe giocate fisicamente in
+    un'altra regione (es. Misanino/Pomposa, Emilia-Romagna), quindi un match
+    sul titolo "contaminerebbe" la region fisica condivisa col resto dell'app.
+    1. match sulla tabella tracks (nome pista esatto o come sottostringa,
+       i nomi RKC ASI hanno spesso suffissi tipo "Circuit"/"Kart" in piu');
+    2. sigla provincia in fondo all'indirizzo (es. "... 44022 San Giuseppe FE").
+    None se non determinabile: dato incompleto ammesso, resta a resolve_region
+    generico (su titolo) in insert_events_to_supabase come ultima spiaggia."""
+    key = (venue_name or "").strip().lower()
+    if key:
+        for name, region in track_regions.items():
+            if name in key or key in name:
+                return region
+
+    code_match = re.search(r'\b([A-Z]{2})$', (address or "").strip())
+    if code_match:
+        region = PROVINCE_TO_REGION.get(code_match.group(1))
+        if region:
+            return region
+
+    return None
+
+
 def resolve_format(title):
     """Stessa euristica del backfill della migration 001."""
     if title and ("campionato" in title.lower() or "championship" in title.lower()):
         return "campionato"
     return "gara_singola"
+
+# Fonti in cui source_url NON identifica una singola gara (tutte le tappe KRM
+# puntano alla stessa pagina calendario): la riconciliazione le salta.
+SHARED_URL_DOMAINS = ("kartingrentalmaster.it",)
+# Tetto di cancellazioni per run: oltre, qualcosa non torna (fonte rotta,
+# parsing cambiato) e non si cancella nulla senza --force-prune.
+MAX_AUTO_PRUNE = 25
+
+def _domain(url):
+    return urlparse(url or "").netloc.lower().removeprefix("www.")
+
+def find_obsolete_events(scraped_events, today=None):
+    """Righe del DB create dallo scraper (created_by nullo) che la fonte non
+    conferma piu', da rimuovere perche' altrimenti restano a calendario per
+    sempre. Due casi, solo per le fonti scrapeate in questo run con almeno un
+    evento (una fonte irraggiungibile non cancella nulla):
+    - spostata: stessa source_url ma data diversa da quella attuale (la gara
+      e' stata riprogrammata, oppure era stata salvata con una data sbagliata);
+    - sparita: source_url non piu' in elenco e data da oggi in poi (gara
+      annullata). Le gare passate non si toccano: sono storico.
+    Ritorna le righe (id, title, event_date, source_url) senza cancellare."""
+    if not supabase:
+        return []
+    today = (today or date.today()).isoformat()
+
+    dates_by_url = {}
+    for e in scraped_events:
+        if _domain(e.source_url) in SHARED_URL_DOMAINS:
+            continue
+        dates_by_url.setdefault(e.source_url, set()).add(e.event_date)
+    domains = {_domain(u) for u in dates_by_url}
+
+    try:
+        db_rows, offset = [], 0
+        while True:
+            page = (
+                supabase.table("events")
+                .select("id, title, event_date, source_url, created_by")
+                .range(offset, offset + 999)
+                .execute()
+                .data
+            ) or []
+            db_rows.extend(page)
+            if len(page) < 1000:
+                break
+            offset += 1000
+    except Exception as e:
+        print(f"Avviso: lettura eventi esistenti fallita ({e}); riconciliazione saltata.")
+        return []
+
+    obsolete = []
+    for row in db_rows:
+        url = row.get("source_url")
+        if row.get("created_by") or _domain(url) not in domains:
+            continue
+        if url in dates_by_url:
+            if row["event_date"] not in dates_by_url[url]:
+                obsolete.append(row)
+        elif row["event_date"] >= today:
+            obsolete.append(row)
+    return obsolete
+
+def delete_obsolete_events(rows, force=False):
+    if not rows:
+        return
+    if len(rows) > MAX_AUTO_PRUNE and not force:
+        print(f"ATTENZIONE: {len(rows)} eventi da rimuovere superano il tetto di {MAX_AUTO_PRUNE}: "
+              "nessuna cancellazione (controlla le fonti, oppure rilancia con --force-prune).")
+        return
+    ids = [r["id"] for r in rows]
+    supabase.table("events").delete().in_("id", ids).execute()
+    print(f"Rimossi {len(ids)} eventi non piu' presenti alla fonte.")
+
 
 def insert_events_to_supabase(events_list):
     """Carica una lista di oggetti KartingEvent nella tabella Supabase.
