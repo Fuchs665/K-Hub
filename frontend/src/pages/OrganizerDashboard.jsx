@@ -2,21 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { insertEvent, getEventsLite } from '../lib/eventsRepository';
 import { getProfilesLite, insertRaceResults, insertLapTimes } from '../lib/resultsRepository';
 import { parseTimeToMs } from '../lib/utils';
-import { Plus, Trash2, CircleAlert, CircleCheck } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import useDocumentTitle from '../components/kh/useDocumentTitle';
+import Notice from '../components/kh/Notice';
 
 const EMPTY_ROW = { pilot_name: '', position: '', points: '' };
-
-function Notice({ kind, children }) {
-  const ok = kind === 'success';
-  const Icon = ok ? CircleCheck : CircleAlert;
-  return (
-    <div className={`kh-notice ${ok ? 'is-success' : 'is-error'}`} role={ok ? 'status' : 'alert'}>
-      <Icon size={20} aria-hidden="true" />
-      <span>{children}</span>
-    </div>
-  );
-}
 
 function OrganizerDashboard() {
   useDocumentTitle('Area organizzatori, K-Hub');

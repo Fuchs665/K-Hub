@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { User, Shield, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import HudFrame from '../components/HudFrame';
-import SectionEyebrow from '../components/SectionEyebrow';
+import useDocumentTitle from '../components/kh/useDocumentTitle';
+import Notice from '../components/kh/Notice';
 
 async function ensureProfile(userId, role) {
   const { data: existing } = await supabase
@@ -18,6 +17,7 @@ async function ensureProfile(userId, role) {
 }
 
 function Auth() {
+  useDocumentTitle('Accedi, K-Hub');
   const [activeTab, setActiveTab] = useState('pilota'); // 'pilota' o 'pista'
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -57,65 +57,71 @@ function Auth() {
   };
 
   return (
-    <div className="rkc-page auth-page">
-      <div className="khub-bg" aria-hidden="true">
-        <div className="khub-bg-grid" />
-        <div className="khub-bg-speed" />
-        <div className="khub-bg-grain" />
-      </div>
+    <div className="kh-wrap kh-auth">
+      <div className="kh-auth__card">
+        <h1 className="kh-display-1 kh-auth__title">{isLogin ? 'Accedi' : 'Crea account'}</h1>
 
-      <HudFrame className="auth-card" corners={['tl', 'br']} style={{ '--hud-size': '24px', '--hud-inset': '16px' }}>
-        <SectionEyebrow className="auth-eyebrow" as="div">Area Riservata</SectionEyebrow>
-        <h1 className="rkc-title auth-title">Accedi a <em>K-Hub</em></h1>
-
-        {/* Tabs */}
-        <div className="rkc-toggle auth-tabs">
-          <button
-            className={`rkc-toggle-btn ${activeTab === 'pilota' ? 'active' : ''}`.trim()}
-            onClick={() => setActiveTab('pilota')}
-          >
-            <User size={16} /> Pilota
+        <div className="kh-chips kh-auth__roles" role="group" aria-label="Tipo di account">
+          <button type="button" className="kh-chip" aria-pressed={activeTab === 'pilota'} onClick={() => setActiveTab('pilota')}>
+            Pilota
           </button>
-          <button
-            className={`rkc-toggle-btn ${activeTab === 'pista' ? 'active' : ''}`.trim()}
-            onClick={() => setActiveTab('pista')}
-          >
-            <Shield size={16} /> Pista
+          <button type="button" className="kh-chip" aria-pressed={activeTab === 'pista'} onClick={() => setActiveTab('pista')}>
+            Pista
           </button>
         </div>
 
-        <p className="org-hint auth-desc">
-          {activeTab === 'pilota' ?
-            "Salva i tuoi eventi preferiti e ricevi newsletter personalizzate." :
-            "Accedi all'Area Organizzatori per inserire e gestire i tuoi eventi a calendario."
-          }
+        <p className="kh-lede kh-auth__desc">
+          {activeTab === 'pilota'
+            ? 'Salva i tuoi eventi preferiti e ricevi newsletter personalizzate.'
+            : "Accedi all'Area Organizzatori per inserire e gestire i tuoi eventi a calendario."}
         </p>
 
-        {infoMsg && <div className="org-msg is-success">{infoMsg}</div>}
-        {errorMsg && <div className="org-msg is-error">{errorMsg}</div>}
+        {infoMsg && <Notice kind="success">{infoMsg}</Notice>}
+        {errorMsg && <Notice kind="error">{errorMsg}</Notice>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="brutalist-input-group is-dark">
-            <label>EMAIL</label>
-            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" />
+        <form onSubmit={handleSubmit} className="kh-form">
+          <div className="kh-field">
+            <label htmlFor="auth-email">Email</label>
+            <input
+              id="auth-email"
+              className="kh-input"
+              type="email"
+              name="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com"
+            />
           </div>
 
-          <div className="brutalist-input-group is-dark">
-            <label>PASSWORD</label>
-            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" minLength={6} />
+          <div className="kh-field">
+            <label htmlFor="auth-password">Password</label>
+            <input
+              id="auth-password"
+              className="kh-input"
+              type="password"
+              name="password"
+              autoComplete={isLogin ? 'current-password' : 'new-password'}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Almeno 6 caratteri"
+            />
           </div>
 
-          <button type="submit" disabled={loading} className="btn-snappy auth-submit">
-            {loading ? 'ATTENDERE...' : (isLogin ? 'ACCEDI' : 'CREA ACCOUNT')} <ChevronRight size={18} />
-          </button>
+          <div className="kh-form__actions">
+            <button type="submit" disabled={loading} aria-busy={loading} className={`kh-btn kh-btn--primary ${loading ? 'is-loading' : ''}`.trim()}>
+              {loading ? 'Attendi...' : (isLogin ? 'Accedi' : 'Crea account')}
+            </button>
+          </div>
         </form>
 
-        <div className="auth-switch">
-          <button onClick={() => setIsLogin(!isLogin)} className="auth-switch-btn">
-            {isLogin ? "Non hai un account? Registrati" : "Hai già un account? Accedi"}
-          </button>
-        </div>
-      </HudFrame>
+        <button type="button" onClick={() => setIsLogin(!isLogin)} className="kh-auth__switch">
+          {isLogin ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi'}
+        </button>
+      </div>
     </div>
   );
 }

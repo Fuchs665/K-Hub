@@ -692,3 +692,19 @@ body.kh-body { background: #F1F1EE; }
   .kh-row__remove-text { display: inline; }
   .kh-form__actions .kh-btn { width: 100%; }
 }
+
+/* ---------- accesso e registrazione ---------- */
+.kh-auth { padding-block: 56px 80px; }
+.kh-auth__card { max-width: 440px; margin-inline: auto; display: flex; flex-direction: column; gap: 24px; }
+.kh-auth__title { margin: 0; }
+.kh-auth__roles { padding-bottom: 0; }
+.kh-auth__desc { margin: 0; font-size: 16px; }
+.kh-auth .kh-form__actions .kh-btn { width: 100%; }
+.kh-auth__switch {
+  align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-text); font-size: 16px; font-weight: 700; color: var(--accent-text);
+  text-decoration: underline; text-underline-offset: 3px; text-align: left;
+}
+@media (max-width: 700px) {
+  .kh-auth { padding-block: 28px 56px; }
+}
