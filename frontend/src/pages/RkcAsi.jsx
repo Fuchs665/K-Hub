@@ -1,199 +1,176 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, X, MapPin } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getRkcAsiEvents } from '../lib/eventsRepository';
-import { ITALIAN_REGIONS } from '../lib/constants';
-import HudFrame from '../components/HudFrame';
-import SectionEyebrow from '../components/SectionEyebrow';
-import { formatEventDate } from '../lib/format';
+import { groupEventsByBucket, groupByMonth } from '../lib/eventBuckets';
+import { EventGroups } from '../components/kh/EventRow';
+import useDocumentTitle from '../components/kh/useDocumentTitle';
 
+const OFFICIAL_SITE = 'https://www.rkcasikarting.it/';
+
+// Regione e periodo vivono nell'URL, come nel calendario:
+// /rkc-asi?regione=Lombardia&quando=disputate
+// La regione è quella fisica della pista (events.region), non il gruppo
+// regionale del campionato: una tappa "RKC ASI Toscana" corsa a Pomposa sta
+// sotto Emilia-Romagna.
 function RkcAsi() {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState(null);
-  const tabsRef = useRef(null);
+  useDocumentTitle('RKC ASI — K-Hub');
+  const [params, setParams] = useSearchParams();
+  const region = params.get('regione') || 'ALL';
+  const past = params.get('quando') === 'disputate';
+
+  const [state, setState] = useState({ status: 'loading', events: [] });
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    let cancelled = false;
+    setState((s) => ({ ...s, status: 'loading' }));
+    getRkcAsiEvents({ when: past ? 'past' : 'upcoming' })
+      .then((events) => { if (!cancelled) setState({ status: 'ready', events }); })
+      .catch((error) => {
+        console.error('Errore nel caricare le tappe RKC ASI:', error);
+        if (!cancelled) setState({ status: 'error', events: [] });
+      });
+    return () => { cancelled = true; };
+  }, [past]);
 
-  async function fetchEvents() {
-    try {
-      setLoading(true);
-      setErrorMsg('');
-      const data = await getRkcAsiEvents();
-      setEvents(data);
-    } catch (error) {
-      console.error('Error fetching RKC ASI events:', error);
-      setErrorMsg('Impossibile caricare il calendario RKC ASI.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Conteggio tappe per regione, per evidenziare i tab con dati (come TracksDirectory).
-  const regionCounts = useMemo(() => {
-    const counts = {};
-    for (const e of events) {
-      if (e.region) counts[e.region] = (counts[e.region] || 0) + 1;
-    }
-    return counts;
-  }, [events]);
-
-  const regionsWithData = useMemo(() => Object.keys(regionCounts).length, [regionCounts]);
-
-  const visibleEvents = useMemo(() => {
-    if (!selectedRegion) return events;
-    return events.filter(e => e.region === selectedRegion);
-  }, [events, selectedRegion]);
-
-  const scrollTabs = (direction) => {
-    if (tabsRef.current) {
-      const amount = 220;
-      tabsRef.current.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
-    }
+  const update = (next) => {
+    const merged = { regione: region, quando: past ? 'disputate' : 'programma', ...next };
+    const out = new URLSearchParams();
+    if (merged.regione !== 'ALL') out.set('regione', merged.regione);
+    if (merged.quando === 'disputate') out.set('quando', 'disputate');
+    setParams(out, { replace: true });
   };
 
-  const handleSelectRegion = (name) => setSelectedRegion(prev => (prev === name ? null : name));
+  // Regioni con almeno una tappa nel periodo scelto, in ordine alfabetico.
+  // Quella selezionata resta tra i chip anche se vuota, per poterla togliere.
+  const regions = useMemo(() => {
+    const counts = new Map();
+    for (const e of state.events) if (e.region) counts.set(e.region, (counts.get(e.region) || 0) + 1);
+    if (region !== 'ALL' && !counts.has(region)) counts.set(region, 0);
+    return [...counts.entries()].sort(([a], [b]) => a.localeCompare(b, 'it'));
+  }, [state.events, region]);
+
+  const visible = useMemo(
+    () => (region === 'ALL' ? state.events : state.events.filter((e) => e.region === region)),
+    [state.events, region],
+  );
+  const groups = useMemo(() => (past ? groupByMonth(visible) : groupEventsByBucket(visible)), [visible, past]);
+
+  const ready = state.status === 'ready';
+  const regionsCount = regions.filter(([, n]) => n > 0).length;
+  let countLabel = past ? 'tappe disputate' : 'tappe in programma';
+  if (ready && region === 'ALL' && regionsCount > 0) countLabel += ` in ${regionsCount} ${regionsCount === 1 ? 'regione' : 'regioni'}`;
+  if (ready && region !== 'ALL') countLabel += ` in ${region}`;
+  if (ready && visible.length === 1) countLabel = countLabel.replace('tappe', 'tappa').replace('disputate', 'disputata');
 
   return (
-    <div className="rkc-page">
-      {/* ---------- HERO: header campionato ---------- */}
-      <HudFrame className="rkc-hero" style={{ '--hud-size': '30px', '--hud-inset': '20px' }}>
-        <div className="khub-bg" aria-hidden="true">
-          <div className="khub-bg-grid" />
-          <div className="khub-bg-speed" />
-          <div className="khub-bg-grain" />
-        </div>
-
-        <div className="rkc-hero-inner">
-          <SectionEyebrow className="rkc-hero-eyebrow">
-            Rental Kart Championship — ASI · Season 2026
-          </SectionEyebrow>
-          <h1 className="rkc-title">RKC <em>ASI</em></h1>
-          <p className="rkc-subtitle">
-            Il campionato di rental karting verso le finali nazionali ASI. Qui trovi il calendario
-            delle tappe regione per regione; classifica e migliori giri arriveranno a stagione avviata.
+    <>
+      <section className="kh-wrap kh-cal-head">
+        <div>
+          <h1 className="kh-display-1">RKC ASI</h1>
+          <p className="kh-lede" style={{ marginTop: 16 }}>
+            Il Rental Kart Championship di ASI: tappe regionali su kart a noleggio che portano alle finali nazionali.
+            Qui trovi le date regione per regione; iscrizioni, classifiche e tempi li gestisce il campionato.
           </p>
-          <div className="rkc-hero-stats">
-            <div className="rkc-stat"><b>{loading ? '—' : events.length}</b><span>Tappe in calendario</span></div>
-            <div className="rkc-stat"><b>{loading ? '—' : regionsWithData}</b><span>Regioni coinvolte</span></div>
-            <div className="rkc-stat"><b>2026</b><span>Stagione</span></div>
-          </div>
         </div>
-      </HudFrame>
-
-      {/* ---------- CLASSIFICA (placeholder: nessun dato reale) ----------
-           Il board e il pannello dettaglio pilota vivevano su un set di piloti
-           inventati: rimossi. Le classi .rkc-board/.rkc-row/.rkc-detail/.rkc-tile
-           restano in index.css perche' le usano EventDetails e Dashboard, quindi
-           quando ci saranno risultati veri da race_results il markup si rimonta
-           uguale. */}
-      <section className="rkc-section container">
-        <div className="rkc-section-head">
-          <div>
-            <SectionEyebrow className="rkc-section-eyebrow">Standing di campionato</SectionEyebrow>
-            <h2 className="rkc-section-title">Classifica</h2>
-          </div>
+        <div className="kh-stat kh-cal-count" aria-live="polite">
+          <span className="kh-count">{ready ? visible.length : '–'}</span>
+          <span>{countLabel}</span>
         </div>
-
-        <div className="khub-board-soon">// CLASSIFICA CAMPIONATO — DATI IN ARRIVO A STAGIONE AVVIATA</div>
       </section>
 
-      {/* ---------- CALENDARIO TAPPE (dati reali per regione) ---------- */}
-      <section className="rkc-section container">
-        <div className="rkc-section-head">
-          <div>
-            <SectionEyebrow className="rkc-section-eyebrow">Verso le finali nazionali</SectionEyebrow>
-            <h2 className="rkc-section-title">
-              {selectedRegion ? `Tappe in ${selectedRegion}` : 'Calendario tappe'}
-            </h2>
-          </div>
-          {selectedRegion && (
-            <button className="rkc-tab active" onClick={() => setSelectedRegion(null)}>
-              <X size={13} style={{ verticalAlign: '-2px', marginRight: '4px' }} /> Tutte le regioni
+      <section className="kh-wrap kh-cal-tools" aria-label="Filtri delle tappe">
+        <div className="kh-cal-row">
+          <div className="kh-chips kh-chips--wrap" role="group" aria-label="Regione">
+            <button type="button" className="kh-chip" aria-pressed={region === 'ALL'} onClick={() => update({ regione: 'ALL' })}>
+              Tutte le regioni
             </button>
-          )}
-        </div>
-
-        {/* Tab regione con frecce di scroll */}
-        <div className="rkc-tabs-wrap">
-          <button onClick={() => scrollTabs('left')} className="rkc-scroll-btn" aria-label="Scorri regioni a sinistra">
-            <ChevronLeft size={20} />
-          </button>
-          <div className="rkc-tabs no-scrollbar" ref={tabsRef}>
-            {ITALIAN_REGIONS.map(region => (
+            {regions.map(([name, n]) => (
               <button
-                key={region}
-                onClick={() => handleSelectRegion(region)}
-                className={`rkc-tab ${regionCounts[region] ? 'has-data' : ''} ${selectedRegion === region ? 'active' : ''}`.replace(/\s+/g, ' ').trim()}
+                key={name}
+                type="button"
+                className="kh-chip kh-chip--count"
+                aria-pressed={region === name}
+                onClick={() => update({ regione: region === name ? 'ALL' : name })}
               >
-                {region}{regionCounts[region] ? ` (${regionCounts[region]})` : ''}
+                {name} <span className="kh-chip__n">{n}</span>
               </button>
             ))}
           </div>
-          <button onClick={() => scrollTabs('right')} className="rkc-scroll-btn" aria-label="Scorri regioni a destra">
-            <ChevronRight size={20} />
-          </button>
+          <div className="kh-seg" role="group" aria-label="Periodo">
+            <button type="button" aria-pressed={!past} onClick={() => update({ quando: 'programma' })}>In programma</button>
+            <button type="button" aria-pressed={past} onClick={() => update({ quando: 'disputate' })}>Disputate</button>
+          </div>
         </div>
+      </section>
 
-        {loading ? (
-          <div className="khub-events-grid">
-            {[0, 1, 2].map(i => (
-              <div className="khub-event-card" key={i} aria-hidden="true">
-                <span className="khub-skel" style={{ width: '40%' }} />
-                <span className="khub-skel" style={{ width: '85%', height: '22px' }} />
-                <span className="khub-skel" style={{ width: '55%' }} />
+      <section className="kh-wrap kh-cal-body" aria-label={past ? 'Tappe disputate' : 'Tappe in programma'}>
+        {state.status === 'loading' ? (
+          <div className="kh-event-list" aria-label="Caricamento delle tappe">
+            {[0, 1, 2].map((i) => (
+              <div className="kh-skel-row" key={i} aria-hidden="true">
+                <span className="kh-skel" style={{ width: 72, height: 78 }} />
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                  <span className="kh-skel" style={{ width: '55%', height: 20 }} />
+                  <span className="kh-skel" style={{ width: '30%', height: 14 }} />
+                </span>
               </div>
             ))}
           </div>
-        ) : errorMsg ? (
-          <div className="rkc-error">{errorMsg}</div>
-        ) : visibleEvents.length === 0 ? (
-          <div className="rkc-empty">
-            {selectedRegion
-              ? `// Nessuna tappa RKC ASI confermata in ${selectedRegion} al momento`
-              : '// Calendario tappe in arrivo — le date ufficiali appariranno qui appena confermate'}
+        ) : state.status === 'error' ? (
+          <div className="kh-empty">
+            <h2 className="kh-title-3">Non riusciamo a caricare le tappe</h2>
+            <p className="kh-muted">Controlla la connessione e riprova tra poco.</p>
+            <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => window.location.reload()}>
+              Riprova
+            </button>
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="kh-empty">
+            <h2 className="kh-title-3">
+              {region !== 'ALL'
+                ? `Nessuna tappa ${past ? 'disputata' : 'in programma'} in ${region}`
+                : `Nessuna tappa ${past ? 'disputata' : 'in programma'} al momento`}
+            </h2>
+            <p className="kh-muted">
+              {past ? 'Le tappe compaiono qui dopo la data di gara.' : 'Le nuove date appaiono qui appena il campionato le pubblica.'}
+            </p>
+            {region !== 'ALL' && (
+              <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => update({ regione: 'ALL' })}>
+                Mostra tutte le regioni
+              </button>
+            )}
+            {!past && (
+              <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => update({ quando: 'disputate' })}>
+                Guarda le tappe disputate
+              </button>
+            )}
           </div>
         ) : (
-          <div className="khub-events-grid">
-            {visibleEvents.map(ev => {
-              const inner = (
-                <>
-                  <div className="khub-event-top">
-                    <span className={`khub-event-tag ${ev.event_type?.toLowerCase() === 'sprint' ? 'is-sprint' : 'is-endurance'}`}>
-                      {ev.event_type || 'GARA'}
-                    </span>
-                    <span className="khub-event-date">{formatEventDate(ev.event_date)}</span>
-                  </div>
-                  <h3 className="khub-event-title">{ev.title}</h3>
-                  {ev.track_name && (
-                    <div className="khub-event-track">
-                      <MapPin size={14} /> {ev.track_name}
-                    </div>
-                  )}
-                  <span className="khub-event-cta">
-                    {ev.source_url ? 'Dettagli & iscrizione ▸' : 'Classifica & tempi ▸'}
-                  </span>
-                </>
-              );
-              // Per le tappe RKC il valore e il link esterno alla pagina evento (scelta Step 7);
-              // fallback alla scheda interna se manca il source_url.
-              return ev.source_url ? (
-                <a key={ev.id} href={ev.source_url} target="_blank" rel="noreferrer" className="khub-event-card">
-                  {inner}
-                </a>
-              ) : (
-                <Link key={ev.id} to={`/event/${ev.id}`} className="khub-event-card">
-                  {inner}
-                </Link>
-              );
-            })}
-          </div>
+          <EventGroups groups={groups} register={!past} />
         )}
       </section>
-    </div>
+
+      {/* Classifiche e tempi restano sul circuito ufficiale (Apex Timing): solo link, nessuna copia. */}
+      <section className="kh-band" aria-labelledby="rkc-results">
+        <div className="kh-wrap kh-band__grid kh-band__grid--solo">
+          <div className="kh-band__copy">
+            <h2 id="rkc-results" className="kh-title-2">Classifiche e tempi</h2>
+            <p style={{ fontSize: 18 }}>
+              La classifica di campionato e i tempi giro di ogni tappa li pubblica RKC ASI, con il cronometraggio
+              live di Apex Timing. Per vederli si va sul sito ufficiale.
+            </p>
+            <ul className="kh-band__list">
+              <li>Iscrizione dal bottone di ogni tappa</li>
+              <li>Classifica di campionato sul sito RKC ASI</li>
+              <li>Tempi giro su Apex Timing</li>
+            </ul>
+            <a href={OFFICIAL_SITE} target="_blank" rel="noreferrer" className="kh-btn kh-btn--secondary">
+              Vai al sito RKC ASI<span className="kh-sr"> (si apre in una nuova scheda)</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
 

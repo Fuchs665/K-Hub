@@ -94,20 +94,22 @@ export async function insertEvent(eventData) {
   return data;
 }
 
-// Tappe ufficiali RKC ASI (events.series = 'rkc_asi'), future, per la pagina RkcAsi.
-export async function getRkcAsiEvents() {
-  const cacheKey = 'rkcAsiEvents:upcoming';
+// Tappe ufficiali RKC ASI (events.series = 'rkc_asi') per la pagina RkcAsi.
+// when: 'upcoming' (da oggi, crescenti) o 'past' (prima di oggi, decrescenti).
+export async function getRkcAsiEvents({ when = 'upcoming' } = {}) {
+  const cacheKey = `rkcAsiEvents:${when}`;
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
   const today = new Date().toISOString().slice(0, 10);
-  const { data, error } = await supabase
+  let query = supabase
     .from('events')
     .select('*')
     .eq('series', 'rkc_asi')
-    .gte('event_date', today)
-    .order('event_date', { ascending: true });
+    .order('event_date', { ascending: when !== 'past' });
+  query = when === 'past' ? query.lt('event_date', today) : query.gte('event_date', today);
 
+  const { data, error } = await query;
   if (error) throw error;
   setCached(cacheKey, data || []);
   return data || [];

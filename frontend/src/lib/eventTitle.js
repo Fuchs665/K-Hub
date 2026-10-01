@@ -22,9 +22,32 @@ function fixCase(word) {
   return word.charAt(0) + word.slice(1).toLowerCase();
 }
 
+// Alcune fonti arrivano con UTF-8 letto come Windows-1252 ("â€“" al posto di
+// "–"). Si rimappano i caratteri sui byte originali e si ridecodifica; se il
+// risultato non è UTF-8 valido il testo resta com'è.
+const CP1252 = '€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008DŽ\u008F\u0090‘’“”•–—˜™š›œ\u009DžŸ';
+const MOJIBAKE = /[ÂÃâ][\u0080-¿€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/;
+
+export function repairMojibake(text) {
+  if (!text || !MOJIBAKE.test(text)) return text;
+  const bytes = [];
+  for (const ch of text) {
+    const code = ch.codePointAt(0);
+    const i = CP1252.indexOf(ch);
+    if (i >= 0) bytes.push(0x80 + i);
+    else if (code <= 0xFF) bytes.push(code);
+    else return text;
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes));
+  } catch {
+    return text;
+  }
+}
+
 export function cleanEventTitle(title, trackName) {
   if (!title) return '';
-  let t = String(title).replace(SOURCE_TAG, '').replace(DAY_TAG, '');
+  let t = repairMojibake(String(title)).replace(SOURCE_TAG, '').replace(DAY_TAG, '');
 
   if (trackName) {
     t = t.replace(new RegExp(`\\s*${escapeRegex(trackName.trim())}`, 'i'), '').replace(/\s*\(\s*\)/g, '');

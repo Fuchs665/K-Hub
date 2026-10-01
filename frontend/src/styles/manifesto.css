@@ -541,3 +541,10 @@ body.kh-body { background: #F1F1EE; }
   .kh-track-row__thumb, .kh-track-row__thumb .kh-track { height: 48px; }
   .kh-track-row__side { grid-column: 2; flex-direction: row; align-items: baseline; gap: var(--space-4); }
 }
+
+/* ---------- RKC ASI ---------- */
+.kh-chips--wrap { flex-wrap: wrap; overflow: visible; padding-bottom: 0; }
+.kh-chip--count { display: inline-flex; align-items: center; gap: 10px; }
+.kh-chip__n { font-family: var(--font-timing); font-weight: 900; font-size: 17px; line-height: 1; color: var(--accent-text); }
+.kh-chip[aria-pressed="true"] .kh-chip__n { color: var(--on-highlight); }
+.kh-band__grid--solo { grid-template-columns: minmax(0, 1fr); }

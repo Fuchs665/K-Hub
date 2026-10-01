@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { getEvents, getEventFacets } from '../lib/eventsRepository';
 import { parseEventDate, formatLongDate } from '../lib/format';
-import { ITALIAN_MONTHS, startOfDay, toIsoDate, groupEventsByBucket } from '../lib/eventBuckets';
+import { ITALIAN_MONTHS, startOfDay, toIsoDate, groupEventsByBucket, groupByMonth } from '../lib/eventBuckets';
 import { cleanEventTitle } from '../lib/eventTitle';
 import EventRow, { EventGroups } from '../components/kh/EventRow';
 import useDocumentTitle from '../components/kh/useDocumentTitle';
@@ -59,19 +59,6 @@ function buildMonthCells(first, eventsByDay) {
   }
   while (cells.length % 7 !== 0) cells.push({ key: `trail-${cells.length}` });
   return cells;
-}
-
-// Gare passate: raggruppate per mese, dal più recente.
-function groupByMonth(events) {
-  const groups = [];
-  for (const event of events) {
-    const d = parseEventDate(event.event_date);
-    const label = d ? `${ITALIAN_MONTHS[d.getMonth()]} ${d.getFullYear()}` : 'Data da confermare';
-    const last = groups[groups.length - 1];
-    if (last && last.label === label) last.events.push(event);
-    else groups.push({ label, events: [event] });
-  }
-  return groups;
 }
 
 function SkeletonRows() {

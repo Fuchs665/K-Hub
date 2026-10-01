@@ -64,3 +64,16 @@ export function groupEventsByBucket(events, today = startOfDay(new Date())) {
   }
   return groups;
 }
+
+// Gare passate: raggruppate per mese, dal più recente.
+export function groupByMonth(events) {
+  const groups = [];
+  for (const event of events) {
+    const d = parseEventDate(event.event_date);
+    const label = d ? `${ITALIAN_MONTHS[d.getMonth()]} ${d.getFullYear()}` : 'Data da confermare';
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.events.push(event);
+    else groups.push({ label, events: [event] });
+  }
+  return groups;
+}
