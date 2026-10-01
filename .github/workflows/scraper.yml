@@ -1,0 +1,60 @@
+name: Scraper eventi
+
+# Aggiorna la tabella events da WeRace, XRace, KRM e RKC ASI.
+# SWS non e' incluso: il sito e' dietro reCAPTCHA.
+on:
+  schedule:
+    # Due volte al giorno (UTC): 05:17 e 17:17, cioe' le 7:17 e le 19:17 in Italia (ora legale).
+    - cron: "17 5,17 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Solo lettura: non scrive e non cancella sul database"
+        type: boolean
+        default: true
+
+# Mai due run insieme sullo stesso database.
+concurrency:
+  group: scraper
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # Libreria interna privata: serve il secret TOOLKIT_TOKEN (token con sola lettura del repo).
+      - uses: actions/checkout@v4
+        with:
+          repository: Fuchs665/it-scraper-toolkit
+          token: ${{ secrets.TOOLKIT_TOKEN }}
+          path: .toolkit-src
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: scraper/requirements-ci.txt
+
+      - name: Installa le dipendenze
+        run: |
+          pip install -r scraper/requirements-ci.txt
+          pip install ./.toolkit-src
+
+      - name: Esegui lo scraper
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Su schedule dry_run e' vuoto: run reale. Da avvio manuale vale la scelta fatta.
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python run_all.py --dry-run
+          else
+            python run_all.py
+          fi

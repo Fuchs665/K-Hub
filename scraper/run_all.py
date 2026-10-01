@@ -2,7 +2,7 @@ import sys
 import os
 from urllib.parse import urlparse
 from toolkit.dedupe import find_duplicates
-from scraper_base import insert_events_to_supabase, find_obsolete_events, delete_obsolete_events
+from scraper_base import supabase, insert_events_to_supabase, find_obsolete_events, delete_obsolete_events
 from werace_scraper import scrape_werace_events
 from xrace_scraper import scrape_xrace_events
 from krm_scraper import scrape_krm_events
@@ -38,39 +38,32 @@ def run_all_scrapers(dry_run=False, force_prune=False):
     
     all_events = []
     
-    # 1. WeRace
-    try:
-        werace_events = scrape_werace_events()
-        all_events.extend(werace_events)
-    except Exception as e:
-        print(f"Errore fatale WeRace: {e}")
+    sources = [
+        ("WeRace", scrape_werace_events),
+        ("XRace", scrape_xrace_events),
+        ("KRM", scrape_krm_events),
+        ("RKC ASI", scrape_rkc_asi_events),  # calendario ufficiale campionati federali
+    ]
+    empty_sources = []
+    for name, scrape in sources:
+        try:
+            found = scrape()
+        except Exception as e:
+            print(f"Errore fatale {name}: {e}")
+            found = []
+        if not found:
+            empty_sources.append(name)
+        all_events.extend(found)
 
-    # 2. XRace
-    try:
-        xrace_events = scrape_xrace_events()
-        all_events.extend(xrace_events)
-    except Exception as e:
-        print(f"Errore fatale XRace: {e}")
-
-    # 3. Karting Rental Master
-    try:
-        krm_events = scrape_krm_events()
-        all_events.extend(krm_events)
-    except Exception as e:
-        print(f"Errore fatale KRM: {e}")
-
-    # 4. RKC ASI (calendario ufficiale campionati federali)
-    try:
-        rkc_asi_events = scrape_rkc_asi_events()
-        all_events.extend(rkc_asi_events)
-    except Exception as e:
-        print(f"Errore fatale RKC ASI: {e}")
+    for name in empty_sources:
+        # Annotazione visibile nel riepilogo di GitHub Actions; altrove e' una riga di testo.
+        print(f"::warning::Fonte {name}: nessun evento estratto")
 
     print(f"\n=== FINE ESTRAZIONE: Totale {len(all_events)} eventi raccolti ===")
 
     if not all_events:
         print("Nessun evento da inserire.")
-        return
+        return False
 
     report_cross_source_duplicates(all_events)
 
@@ -82,15 +75,23 @@ def run_all_scrapers(dry_run=False, force_prune=False):
 
     if dry_run:
         print("Dry-run: inserimento e rimozioni nel database SALTATI.")
-        return
+        return True
+
+    if supabase is None:
+        print("Errore: credenziali Supabase mancanti (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY).")
+        return False
 
     print("Inizio inserimento nel database Supabase...")
     saved = insert_events_to_supabase(all_events)
     if saved is None:
         print("Inserimento fallito: nessuna rimozione eseguita.")
-        return
+        return False
     delete_obsolete_events(obsolete, force=force_prune)
     print("Inserimento completato con successo!")
+    return True
 
 if __name__ == "__main__":
-    run_all_scrapers(dry_run="--dry-run" in sys.argv, force_prune="--force-prune" in sys.argv)
+    # Codice di uscita != 0 se non si e' scritto nulla di utile: GitHub Actions segnala
+    # il run come fallito e avvisa via email.
+    ok = run_all_scrapers(dry_run="--dry-run" in sys.argv, force_prune="--force-prune" in sys.argv)
+    sys.exit(0 if ok else 1)
