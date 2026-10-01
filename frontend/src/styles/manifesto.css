@@ -606,3 +606,39 @@ body.kh-body { background: #F1F1EE; }
   .kh-faq summary { font-size: 17px; }
   .kh-band .kh-actions .kh-btn { flex: 1 1 100%; }
 }
+
+/* ---------- Dashboard pilota ---------- */
+.kh-dash-head { padding-block: 56px 40px; }
+.kh-dash-kpi { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6); padding-block: var(--space-6) 56px; border-top: 1px solid var(--line); }
+.kh-dash-stat { display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-3); min-width: 0; }
+.kh-dash-stat__n { font-size: 56px; }
+.kh-dash-stat__label { font-size: 14px; font-weight: 500; color: var(--ink-muted); }
+
+.kh-trend { list-style: none; margin: 0; padding: 0; display: flex; align-items: stretch; gap: clamp(6px, 1.6vw, 20px); }
+.kh-trend__col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.kh-trend__val { font-size: 22px; }
+.kh-trend__track { width: 100%; height: 180px; display: flex; align-items: flex-end; border-bottom: 2px solid var(--line-strong); }
+.kh-trend__bar { display: block; width: 100%; background: var(--blu-inchiostro); }
+.kh-trend__bar.is-podium { background: var(--giallo-corsa); box-shadow: inset 0 0 0 2px var(--blu-inchiostro); }
+.kh-trend__date { margin-top: var(--space-1); padding-bottom: var(--space-3); font-size: 12px; font-weight: 600; color: var(--ink-muted); white-space: nowrap; }
+.kh-trend__legend .is-podium::before { background: var(--giallo-corsa); box-shadow: inset 0 0 0 2px var(--blu-inchiostro); }
+.kh-trend__legend .is-other::before { background: var(--blu-inchiostro); }
+
+.kh-history .kh-results__pos { width: 72px; }
+.kh-history__podium { color: var(--accent-text); }
+.kh-history__where { display: block; margin-top: var(--space-1); }
+
+@media (max-width: 960px) {
+  .kh-dash-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 32px; }
+}
+@media (max-width: 600px) {
+  .kh-dash-head { padding-block: 28px 24px; }
+  .kh-dash-stat__n { font-size: 44px; }
+  .kh-dash-kpi .kh-lap__value { font-size: 30px; }
+  .kh-trend__track { height: 130px; }
+  .kh-trend__val { font-size: 16px; }
+  .kh-trend__date { font-size: 11px; }
+  .kh-trend__col:nth-child(even) .kh-trend__date { visibility: hidden; }
+  .kh-history .kh-results__pos { width: 40px; }
+  .kh-history .kh-results__toggle .kh-btn { padding: 0 10px; }
+}

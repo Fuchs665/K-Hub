@@ -1,197 +1,193 @@
 import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getPilotStats, getPilotRaceHistory } from '../lib/pilotsRepository';
-import { formatTimeMs } from '../lib/utils';
-import { formatEventDate } from '../lib/format';
-import { Trophy, Flag, Timer, ChevronRight, Gauge } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import HudFrame from '../components/HudFrame';
-import SectionEyebrow from '../components/SectionEyebrow';
+import { parseEventDate } from '../lib/format';
+import { cleanEventTitle, formatName } from '../lib/eventTitle';
+import LapTime from '../components/kh/LapTime';
+import useDocumentTitle from '../components/kh/useDocumentTitle';
+
+const EMPTY_STATS = { races_count: 0, podiums_count: 0, best_lap_ms: 0, avg_lap_ms: 0 };
+const TREND_RACES = 10;
+
+const shortDate = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short' });
+const fullDate = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+
+function dateLabel(formatter, dateStr) {
+  const date = parseEventDate(dateStr);
+  return date ? formatter.format(date).replace(/\./g, '') : '';
+}
+
+const isPodium = (position) => position > 0 && position <= 3;
 
 function Dashboard() {
-  const [stats, setStats] = useState(null);
-  const [races, setRaces] = useState([]);
-  const [loading, setLoading] = useState(true);
+  useDocumentTitle('Dashboard pilota, K-Hub');
+  const [state, setState] = useState({ status: 'loading' });
   const navigate = useNavigate();
 
   useEffect(() => {
+    let alive = true;
     async function loadData() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
         return;
       }
-
       try {
         const userId = session.user.id;
-        const [pilotStats, raceHistory] = await Promise.all([
-          getPilotStats(userId),
-          getPilotRaceHistory(userId)
-        ]);
-
-        // Default stats if none exist
-        setStats(pilotStats || {
-          races_count: 0,
-          podiums_count: 0,
-          best_lap_ms: 0,
-          avg_lap_ms: 0
-        });
-        setRaces(raceHistory || []);
+        const [stats, races] = await Promise.all([getPilotStats(userId), getPilotRaceHistory(userId)]);
+        if (alive) setState({ status: 'ready', stats: stats || EMPTY_STATS, races: races || [] });
       } catch (err) {
-        console.error('Error loading dashboard:', err);
-      } finally {
-        setLoading(false);
+        console.error('Errore nel caricare la dashboard:', err);
+        if (alive) setState({ status: 'error' });
       }
     }
-
     loadData();
+    return () => { alive = false; };
   }, [navigate]);
 
-  if (loading) {
+  if (state.status === 'loading') {
+    return <div className="kh-wrap" style={{ paddingBlock: 80 }}><p className="kh-muted">Caricamento dei tuoi risultati…</p></div>;
+  }
+  if (state.status === 'error') {
     return (
-      <div className="rkc-page dsh-page">
-        <div className="rkc-empty" style={{ padding: '180px 0' }}>// CARICAMENTO TELEMETRIA...</div>
+      <div className="kh-wrap kh-empty" style={{ paddingBlock: 80 }}>
+        <h1 className="kh-title-2">Non riusciamo a caricare i tuoi risultati</h1>
+        <p className="kh-muted">Ricarica la pagina tra qualche minuto.</p>
+        <Link to="/calendar" className="kh-link-accent">Vai al calendario</Link>
       </div>
     );
   }
 
-  // Calcolo trend grafico (ultime 10 gare max)
-  const recentRaces = [...races].reverse().slice(-10);
-  const maxPoints = Math.max(...recentRaces.map(r => r.points || 0), 1);
+  const { stats, races } = state;
+  // Ultime gare in ordine cronologico, dalla più vecchia alla più recente.
+  const recent = [...races].reverse().slice(-TREND_RACES);
+  const maxPoints = Math.max(...recent.map((r) => r.points || 0), 1);
+  const hasPoints = recent.some((r) => r.points > 0);
 
   return (
-    <div className="rkc-page dsh-page">
-      {/* ---------- HERO: header pilota ---------- */}
-      <HudFrame className="rkc-hero dsh-hero" style={{ '--hud-size': '30px', '--hud-inset': '20px' }}>
-        <div className="khub-bg" aria-hidden="true">
-          <div className="khub-bg-grid" />
-          <div className="khub-bg-speed" />
-          <div className="khub-bg-grain" />
+    <>
+      <header className="kh-wrap kh-dash-head">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <h1 className="kh-display-1">Dashboard pilota</h1>
+          <p className="kh-lede">Le tue gare, i podi e i tuoi tempi sul giro, in un posto solo.</p>
         </div>
+      </header>
 
-        <div className="rkc-hero-inner">
-          <SectionEyebrow className="rkc-hero-eyebrow">
-            Career Hub · Season 2026
-          </SectionEyebrow>
-          <h1 className="rkc-title">Dashboard <em>Pilota</em></h1>
-          <p className="rkc-subtitle">
-            Le tue statistiche di gara e i record sul giro.
-          </p>
+      <section className="kh-wrap kh-dash-kpi" aria-label="Le tue statistiche">
+        <div className="kh-dash-stat">
+          <span className="kh-count kh-dash-stat__n">{stats.races_count || 0}</span>
+          <span className="kh-dash-stat__label">Gare disputate</span>
         </div>
-      </HudFrame>
+        <div className="kh-dash-stat">
+          <span className="kh-count kh-dash-stat__n">{stats.podiums_count || 0}</span>
+          <span className="kh-dash-stat__label">Podi (primi tre)</span>
+        </div>
+        <div className="kh-dash-stat">
+          <LapTime ms={stats.best_lap_ms || null} kind="pb" />
+          <span className="kh-dash-stat__label">Miglior tempo sul giro</span>
+        </div>
+        <div className="kh-dash-stat">
+          <LapTime ms={stats.avg_lap_ms ? Math.round(stats.avg_lap_ms) : null} />
+          <span className="kh-dash-stat__label">Tempo medio sul giro</span>
+        </div>
+      </section>
 
-      <section className="rkc-section container">
-        {/* ---------- KPI ---------- */}
-        <HudFrame className="dsh-kpi-frame" corners={['tl', 'br']}>
-          <div className="dsh-kpi-grid">
-            <div className="rkc-tile">
-              <Flag size={28} />
-              <b>{stats.races_count || 0}</b>
-              <span>Gare Disputate</span>
+      {hasPoints && (
+        <section className="kh-section" aria-labelledby="dash-trend">
+          <div className="kh-wrap">
+            <div className="kh-section__head">
+              <div>
+                <h2 id="dash-trend" className="kh-title-2">Punti nelle ultime gare</h2>
+                <p className="kh-muted">Dalla meno recente alla più recente, fino a {TREND_RACES} gare.</p>
+              </div>
             </div>
-            <div className="rkc-tile is-podium">
-              <Trophy size={28} />
-              <b>{stats.podiums_count || 0}</b>
-              <span>Podi (Top 3)</span>
-            </div>
-            <div className="rkc-tile is-lap">
-              <Timer size={28} />
-              <b>{stats.best_lap_ms ? formatTimeMs(stats.best_lap_ms) : '--:--.---'}</b>
-              <span>Miglior Tempo Assoluto</span>
-            </div>
-            <div className="rkc-tile">
-              <Gauge size={28} />
-              <b>{stats.avg_lap_ms ? formatTimeMs(Math.round(stats.avg_lap_ms)) : '--:--.---'}</b>
-              <span>Media sul Giro</span>
-            </div>
-          </div>
-        </HudFrame>
-
-        {/* ---------- Trend punti (grafico CSS) ---------- */}
-        {recentRaces.length > 0 && (
-          <div className="dsh-panel">
-            <SectionEyebrow as="div" className="rkc-section-eyebrow">
-              Trend punti · Ultime gare
-            </SectionEyebrow>
-
-            <div className="dsh-chart">
-              {recentRaces.map((r, idx) => {
-                const heightPct = Math.max((r.points / maxPoints) * 100, 5); // min 5% height
-                const isPodium = r.position <= 3 && r.position > 0;
+            <ol className="kh-trend" aria-label="Punti per gara">
+              {recent.map((r, i) => {
+                const points = r.points || 0;
+                const pct = Math.max((points / maxPoints) * 100, 4);
+                const podium = isPodium(r.position);
+                const name = cleanEventTitle(r.events?.title, r.events?.track_name) || 'Gara';
                 return (
-                  <div key={r.id || idx} className="dsh-chart-col">
-                    <span className="dsh-chart-val">{r.points}</span>
-                    <div
-                      className={`dsh-bar ${isPodium ? 'is-podium' : ''}`.trim()}
-                      style={{ height: `${heightPct}%` }}
-                      title={`Pos: ${r.position} - Punti: ${r.points}`}
-                    />
-                  </div>
+                  <li
+                    key={r.id ?? i}
+                    className="kh-trend__col"
+                    title={`${name}: ${points} punti${r.position ? `, ${r.position}° posto` : ''}`}
+                  >
+                    <span className="kh-count kh-trend__val">{points}</span>
+                    <span className="kh-trend__track" aria-hidden="true">
+                      <span className={`kh-trend__bar${podium ? ' is-podium' : ''}`} style={{ height: `${pct}%` }} />
+                    </span>
+                    <span className="kh-trend__date">{dateLabel(shortDate, r.events?.event_date)}</span>
+                    <span className="kh-sr">{name}, {points} punti{podium ? ', podio' : ''}</span>
+                  </li>
                 );
               })}
+            </ol>
+            <div className="kh-lap-legend kh-trend__legend">
+              <span className="is-podium">Podio (primi tre)</span>
+              <span className="is-other">Altre posizioni</span>
             </div>
           </div>
-        )}
+        </section>
+      )}
 
-        {/* ---------- Telemetria (placeholder: nessuna integrazione attiva) ---------- */}
-        <HudFrame className="dsh-telemetry" corners={['tl', 'br']}>
-          <SectionEyebrow as="div" className="rkc-section-eyebrow">
-            Telemetria
-          </SectionEyebrow>
-          <p className="dsh-telemetry-text">
-            Oggi i tempi sul giro si inseriscono a mano dall'area organizzatori.
-            L'import automatico da servizi di cronometraggio è in valutazione.
-          </p>
-          <div className="dsh-telemetry-sources">
-            <span className="dsh-source is-live">Manuale — attiva</span>
-            <span className="dsh-source">Import automatico</span>
+      <section className="kh-section" aria-labelledby="dash-storico">
+        <div className="kh-wrap">
+          <div className="kh-section__head">
+            <div>
+              <h2 id="dash-storico" className="kh-title-2">Storico gare</h2>
+              <p className="kh-muted">I tempi sul giro si inseriscono a mano dall'area organizzatori. L'import automatico dai servizi di cronometraggio è in valutazione.</p>
+            </div>
           </div>
-        </HudFrame>
 
-        {/* ---------- Storico gare ---------- */}
-        <div className="rkc-section-head" style={{ marginBottom: '16px' }}>
-          <div>
-            <SectionEyebrow className="rkc-section-eyebrow">Risultati</SectionEyebrow>
-            <h2 className="rkc-section-title">Storico Gare</h2>
-          </div>
+          {races.length === 0 ? (
+            <div className="kh-empty" style={{ paddingTop: 0 }}>
+              <h3 className="kh-title-3">Nessuna gara registrata</h3>
+              <p className="kh-muted">I tuoi risultati appariranno qui dopo la prima gara con classifica caricata.</p>
+              <Link to="/calendar" className="kh-btn kh-btn--primary">Trova una gara</Link>
+            </div>
+          ) : (
+            <div className="kh-table-wrap">
+              <table className="kh-results kh-history">
+                <thead>
+                  <tr>
+                    <th scope="col">Pos.</th>
+                    <th scope="col">Gara</th>
+                    <th scope="col" className="kh-num">Punti</th>
+                    <th scope="col"><span className="kh-sr">Classifica</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {races.map((race, i) => {
+                    const ev = race.events;
+                    const title = cleanEventTitle(ev?.title, ev?.track_name) || 'Gara';
+                    const where = [dateLabel(fullDate, ev?.event_date), formatName(ev?.track_name)].filter(Boolean).join(', ');
+                    return (
+                      <tr key={race.id ?? i}>
+                        <td className={`kh-results__pos${isPodium(race.position) ? ' kh-history__podium' : ''}`}>{race.position || '–'}</td>
+                        <td>
+                          <span className="kh-results__name">{title}</span>
+                          {where && <span className="kh-small kh-history__where">{where}</span>}
+                        </td>
+                        <td className="kh-num"><span className="kh-results__pts">{race.points ?? 0}</span></td>
+                        <td className="kh-results__toggle">
+                          {ev?.id && (
+                            <Link to={`/event/${ev.id}`} className="kh-btn kh-btn--secondary kh-btn--sm" aria-label={`Classifica di ${title}`}>
+                              Classifica
+                            </Link>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-
-        {races.length === 0 ? (
-          <div className="empty-state" style={{ marginTop: 0 }}>
-            <Flag size={40} />
-            <h3>Nessuna gara registrata</h3>
-            <p>I tuoi risultati appariranno qui dopo la prima gara con classifica caricata.</p>
-            <Link to="/calendar" className="btn-snappy" style={{ marginTop: '12px', fontSize: '0.9rem' }}>
-              Trova una gara
-            </Link>
-          </div>
-        ) : (
-          <div className="dsh-history">
-            {races.map(race => {
-              const isPodium = race.position > 0 && race.position <= 3;
-              return (
-                <div key={race.id} className="dsh-row">
-                  <span className={`rkc-pos ${isPodium ? 'is-podium' : ''}`.trim()}>
-                    {race.position || '-'}
-                  </span>
-                  <span className="rkc-drv">
-                    {race.events?.title}
-                    <small>{formatEventDate(race.events?.event_date)} — {race.events?.track_name}</small>
-                  </span>
-                  <span className="rkc-val">
-                    {race.points || '0'}
-                    <small>PTS</small>
-                  </span>
-                  <Link to={`/event/${race.events?.id}`} className="cal-btn">
-                    Classifica <ChevronRight size={14} />
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </section>
-    </div>
+    </>
   );
 }
 
