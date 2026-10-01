@@ -2,7 +2,7 @@ import sys
 import os
 from urllib.parse import urlparse
 from toolkit.dedupe import find_duplicates
-from scraper_base import insert_events_to_supabase
+from scraper_base import insert_events_to_supabase, find_obsolete_events, delete_obsolete_events
 from werace_scraper import scrape_werace_events
 from xrace_scraper import scrape_xrace_events
 from krm_scraper import scrape_krm_events
@@ -33,7 +33,7 @@ def report_cross_source_duplicates(events_list):
             e = events_list[i]
             print(f"  - {e.event_date} | {e.track_name} | {e.title} | {e.source_url}")
 
-def run_all_scrapers(dry_run=False):
+def run_all_scrapers(dry_run=False, force_prune=False):
     print("=== INIZIO ESTRAZIONE DA TUTTE LE FONTI ===")
     
     all_events = []
@@ -74,13 +74,23 @@ def run_all_scrapers(dry_run=False):
 
     report_cross_source_duplicates(all_events)
 
+    obsolete = find_obsolete_events(all_events)
+    if obsolete:
+        print(f"\n{len(obsolete)} eventi nel DB non piu' confermati dalla fonte (spostati o annullati):")
+        for r in obsolete:
+            print(f"  - {r['event_date']} | {r['title'][:60]} | {r['source_url']}")
+
     if dry_run:
-        print("Dry-run: inserimento nel database SALTATO.")
+        print("Dry-run: inserimento e rimozioni nel database SALTATI.")
         return
 
     print("Inizio inserimento nel database Supabase...")
-    insert_events_to_supabase(all_events)
+    saved = insert_events_to_supabase(all_events)
+    if saved is None:
+        print("Inserimento fallito: nessuna rimozione eseguita.")
+        return
+    delete_obsolete_events(obsolete, force=force_prune)
     print("Inserimento completato con successo!")
 
 if __name__ == "__main__":
-    run_all_scrapers(dry_run="--dry-run" in sys.argv)
+    run_all_scrapers(dry_run="--dry-run" in sys.argv, force_prune="--force-prune" in sys.argv)
