@@ -20,7 +20,7 @@ import './styles/manifesto.css';
 // Pagine già migrate alla direzione Manifesto (design system K-Hub): usano
 // testata e piè di pagina nuovi e lo stile di styles/manifesto.css. Le altre
 // restano sul vecchio tema scuro finché non vengono ridisegnate, una alla volta.
-const MANIFESTO_ROUTES = [/^\/$/, /^\/calendar\/?$/, /^\/piste\/[^/]+\/?$/];
+const MANIFESTO_ROUTES = [/^\/$/, /^\/calendar\/?$/, /^\/piste\/[^/]+\/?$/, /^\/event\/[^/]+\/?$/];
 const DEFAULT_TITLE = 'K-Hub — Rental Karting Italia';
 
 /**
