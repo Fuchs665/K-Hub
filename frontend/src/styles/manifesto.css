@@ -501,3 +501,43 @@ body.kh-body { background: #F1F1EE; }
   .kh-results__toggle .kh-btn--sm { padding: 0 10px; gap: 4px; }
   .kh-hide-sm { display: none; }
 }
+
+/* ---------- Elenco piste ---------- */
+.kh-tracks-body { padding-block: 16px 80px; border-top: 1px solid var(--line); }
+.kh-tracks-layout { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 64px; align-items: start; padding-top: var(--space-8); }
+.kh-map-col { position: sticky; top: var(--space-6); }
+.kh-theme .italy-map { width: 100%; height: auto; max-height: 70vh; display: block; }
+.kh-theme .italy-region { fill: #E2E2DC; stroke: var(--surface); stroke-width: 0.8; transition: fill 150ms ease; }
+.kh-theme .italy-region.has-tracks { fill: var(--blu-inchiostro); fill-opacity: 1; cursor: pointer; }
+.kh-theme .italy-region.has-tracks:hover { fill: var(--accent); }
+.kh-theme .italy-region.has-tracks:focus-visible { stroke: var(--giallo-corsa); stroke-width: 2.4; }
+.kh-theme .italy-region.selected, .kh-theme .italy-region.selected:hover { fill: var(--accent); stroke: var(--surface); stroke-width: 1.2; }
+.kh-map-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: var(--space-4) 0 0; }
+.kh-swatch { width: 14px; height: 14px; background: #E2E2DC; border: 1px solid var(--line-strong); margin-left: var(--space-3); }
+.kh-swatch--on { background: var(--blu-inchiostro); margin-left: 0; }
+.kh-tracks-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.kh-tracks-n { font-family: var(--font-timing); font-weight: 900; font-size: 1.1em; margin-left: 14px; color: var(--accent-text); }
+.kh-track-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.kh-track-row {
+  position: relative; display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; gap: var(--space-6); align-items: center;
+  padding: 18px 16px; border-bottom: 1px solid var(--line); transition: background 150ms ease;
+}
+.kh-track-row:hover { background: var(--surface-raised); }
+.kh-track-row__thumb { height: 64px; display: flex; align-items: center; }
+.kh-track-row__thumb .kh-track { height: 64px; --kh-track-stroke: 6; }
+.kh-track-row__main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kh-track-row__link { text-decoration: none; }
+.kh-track-row__link::after { content: ""; position: absolute; inset: 0; }
+.kh-track-row__link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.kh-track-row__side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.kh-track-row__site { position: relative; z-index: 1; color: var(--ink) !important; text-underline-offset: 3px; }
+@media (max-width: 960px) {
+  .kh-tracks-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
+  .kh-map-col { position: static; max-width: 320px; margin-inline: auto; }
+  .kh-theme .italy-map { max-height: 300px; }
+}
+@media (max-width: 600px) {
+  .kh-track-row { grid-template-columns: 72px minmax(0, 1fr); gap: var(--space-4); padding-inline: 4px; }
+  .kh-track-row__thumb, .kh-track-row__thumb .kh-track { height: 48px; }
+  .kh-track-row__side { grid-column: 2; flex-direction: row; align-items: baseline; gap: var(--space-4); }
+}
