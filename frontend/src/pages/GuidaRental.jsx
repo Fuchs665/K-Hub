@@ -1,22 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Flag, Zap, Users, Repeat, Calendar, MapPin, BookOpen, HelpCircle, ChevronDown } from 'lucide-react';
-import HudFrame from '../components/HudFrame';
-import SectionEyebrow from '../components/SectionEyebrow';
+import { ChevronDown } from 'lucide-react';
+import useDocumentTitle from '../components/kh/useDocumentTitle';
 
 const FORMATS = [
   {
-    icon: Zap,
     name: 'Sprint',
     desc: 'Gara breve, in genere 10-15 giri o pochi minuti a testa. Ogni pilota corre da solo sul proprio kart: conta il tempo o la posizione al traguardo. È il formato più adatto a chi inizia.'
   },
   {
-    icon: Repeat,
     name: 'Endurance',
     desc: 'Gara a squadre di durata prolungata (da 1 a più ore), con cambi pilota obbligatori durante la gara. Conta la costanza e la gestione dei cambi, non solo il giro veloce.'
   },
   {
-    icon: Users,
     name: 'Ironman',
     desc: 'Come l\'endurance ma senza cambio pilota: un solo pilota guida per tutta la durata della gara. Mette alla prova la resistenza fisica oltre alla velocità.'
   }
@@ -54,114 +50,133 @@ const FAQ = [
   }
 ];
 
-function AccordionItem({ question, answer, isOpen, onToggle }) {
-  return (
-    <div className="gd-faq-item">
-      <button onClick={onToggle} className="gd-faq-btn" aria-expanded={isOpen}>
-        <span>{question}</span>
-        <ChevronDown size={20} />
-      </button>
-      {isOpen && <div className="gd-faq-answer">{answer}</div>}
-    </div>
-  );
-}
+const TOC = [
+  { id: 'cose', label: 'Cos\'è il rental karting' },
+  { id: 'formati', label: 'I formati di gara' },
+  { id: 'dal-calendario', label: 'Dal calendario alla pista' },
+  { id: 'glossario', label: 'Glossario base' },
+  { id: 'faq', label: 'Domande frequenti' }
+];
 
 function GuidaRental() {
-  const [openFaq, setOpenFaq] = useState(null);
-
-  const toggleFaq = (idx) => setOpenFaq(prev => prev === idx ? null : idx);
+  useDocumentTitle('Guida rental — K-Hub');
 
   return (
-    <div className="rkc-page guide-page">
-      {/* ---------- HERO ---------- */}
-      <HudFrame className="rkc-hero guide-hero" style={{ '--hud-size': '30px', '--hud-inset': '20px' }}>
-        <div className="khub-bg" aria-hidden="true">
-          <div className="khub-bg-grid" />
-          <div className="khub-bg-speed" />
-          <div className="khub-bg-grain" />
-        </div>
+    <>
+      <header className="kh-wrap kh-guide-head">
+        <h1 className="kh-display-1">Come iniziare col rental</h1>
+        <p className="kh-lede" style={{ marginTop: 16 }}>
+          La guida essenziale per chi si affaccia per la prima volta alle gare di rental karting.
+        </p>
+      </header>
 
-        <div className="rkc-hero-inner">
-          <SectionEyebrow className="rkc-hero-eyebrow">Guida Neofiti</SectionEyebrow>
-          <h1 className="rkc-title">Come iniziare <em>col Rental</em></h1>
-          <p className="rkc-subtitle">
-            La guida essenziale per chi si affaccia per la prima volta alle gare di rental karting.
-          </p>
-        </div>
-      </HudFrame>
-
-      <section className="rkc-section container">
-        {/* Cos'è il rental karting */}
-        <div className="gd-panel">
-          <h2 className="gd-panel-title"><Flag size={22} /> Cos'è il rental karting</h2>
-          <p className="gd-text">
-            Il rental karting è la forma più accessibile di gara motoristica: si corre con kart a noleggio, forniti direttamente dal circuito, quindi non serve possedere un mezzo proprio. Circuiti in tutta Italia organizzano eventi aperti a chiunque, dai neofiti completi ai piloti più esperti, spesso divisi per fasce di livello. K-Hub raccoglie questi eventi da più organizzatori in un unico calendario, così puoi trovare facilmente una gara vicino a te.
-          </p>
-        </div>
-
-        {/* Formati gara */}
-        <div className="gd-block">
-          <h2 className="gd-panel-title" style={{ marginBottom: '16px' }}><Zap size={22} /> I formati di gara</h2>
-          <div className="gd-format-grid">
-            {FORMATS.map(({ icon: Icon, name, desc }) => (
-              <div key={name} className="gd-format-card">
-                <h3><Icon size={20} /> {name}</h3>
-                <p>{desc}</p>
-              </div>
+      <div className="kh-wrap kh-guide">
+        <nav className="kh-guide__toc" aria-label="In questa guida">
+          <p className="kh-guide__toc-title">In questa guida</p>
+          <ol>
+            {TOC.map(({ id, label }) => (
+              <li key={id}><a href={`#${id}`}>{label}</a></li>
             ))}
-          </div>
-        </div>
+          </ol>
+        </nav>
 
-        {/* Come leggere il calendario */}
-        <div className="gd-panel">
-          <h2 className="gd-panel-title"><Calendar size={22} /> Come leggere un evento nel calendario</h2>
-          <p className="gd-text">
-            Ogni scheda evento nel <Link to="/calendar">Calendario</Link> mostra pista, data e format (Sprint o Endurance). Apri la scheda per vedere i dettagli e, se la gara è già stata disputata, la classifica finale con i tempi giro di ogni pilota. Ricorda: punti e classifiche sono confrontabili solo all'interno dello stesso evento, perché ogni organizzatore usa regole e piste diverse.
-          </p>
-        </div>
+        <article className="kh-guide__body">
+          <section id="cose" aria-labelledby="cose-t">
+            <h2 id="cose-t" className="kh-title-2">Cos'è il rental karting</h2>
+            <p className="kh-prose">
+              Il rental karting è la forma più accessibile di gara motoristica: si corre con kart a noleggio, forniti direttamente dal circuito, quindi non serve possedere un mezzo proprio. Circuiti in tutta Italia organizzano eventi aperti a chiunque, dai neofiti completi ai piloti più esperti, spesso divisi per fasce di livello. K-Hub raccoglie questi eventi da più organizzatori in un unico calendario, così puoi trovare facilmente una gara vicino a te.
+            </p>
+          </section>
 
-        {/* Come prenotare */}
-        <div className="gd-panel">
-          <h2 className="gd-panel-title"><MapPin size={22} /> Come prenotare una pista</h2>
-          <p className="gd-text">
-            K-Hub aggrega gli eventi ma non gestisce le iscrizioni: per prenotare devi contattare direttamente l'organizzatore o il circuito indicato nella scheda evento. Nella pagina <Link to="/tracks">Le Piste</Link> trovi l'elenco dei circuiti censiti: da lì puoi orientarti su quali sono attivi vicino a te prima ancora di guardare il calendario gare.
-          </p>
-        </div>
+          <section id="formati" aria-labelledby="formati-t">
+            <h2 id="formati-t" className="kh-title-2">I formati di gara</h2>
+            <dl className="kh-defs kh-defs--formats">
+              {FORMATS.map(({ name, desc }) => (
+                <div key={name}>
+                  <dt>{name}</dt>
+                  <dd>{desc}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
 
-        {/* Glossario */}
-        <div className="gd-panel" style={{ padding: 0 }}>
-          <div className="gd-panel-head">
-            <h2 className="gd-panel-title"><BookOpen size={22} /> Glossario base</h2>
-          </div>
-          <div className="gd-glossary">
-            {GLOSSARY.map(({ term, def }) => (
-              <div key={term} className="gd-glossary-item">
-                <div className="gd-term">{term}</div>
-                <div className="gd-def">{def}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+          <section id="dal-calendario" aria-labelledby="dal-calendario-t">
+            <h2 id="dal-calendario-t" className="kh-title-2">Dal calendario alla pista</h2>
+            <ol className="kh-steps">
+              <li>
+                <span className="kh-steps__n kh-count" aria-hidden="true">1</span>
+                <div>
+                  <h3 className="kh-title-3">Trova la gara</h3>
+                  <p className="kh-prose">
+                    Ogni riga del <Link to="/calendar" className="kh-link-accent">Calendario</Link> mostra pista, data e format (Sprint o Endurance). Nella pagina <Link to="/tracks" className="kh-link-accent">Le Piste</Link> trovi l'elenco dei circuiti censiti: da lì puoi orientarti su quali sono attivi vicino a te prima ancora di guardare le date.
+                  </p>
+                </div>
+              </li>
+              <li>
+                <span className="kh-steps__n kh-count" aria-hidden="true">2</span>
+                <div>
+                  <h3 className="kh-title-3">Apri la scheda</h3>
+                  <p className="kh-prose">
+                    Nella scheda trovi i dettagli e, se la gara è già stata disputata, la classifica finale con i tempi giro di ogni pilota. Ricorda: punti e classifiche sono confrontabili solo all'interno dello stesso evento, perché ogni organizzatore usa regole e piste diverse.
+                  </p>
+                </div>
+              </li>
+              <li>
+                <span className="kh-steps__n kh-count" aria-hidden="true">3</span>
+                <div>
+                  <h3 className="kh-title-3">Iscriviti dall'organizzatore</h3>
+                  <p className="kh-prose">
+                    K-Hub aggrega gli eventi ma non gestisce le iscrizioni: il bottone Iscriviti ti porta sul sito dell'organizzatore o del circuito, dove prenoti il tuo posto.
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </section>
 
-        {/* FAQ */}
-        <div className="gd-panel" style={{ padding: 0, marginBottom: 0 }}>
-          <div className="gd-panel-head">
-            <h2 className="gd-panel-title"><HelpCircle size={22} /> Domande frequenti</h2>
-          </div>
-          <div>
-            {FAQ.map((item, idx) => (
-              <AccordionItem
-                key={idx}
-                question={item.q}
-                answer={item.a}
-                isOpen={openFaq === idx}
-                onToggle={() => toggleFaq(idx)}
-              />
-            ))}
+          <section id="glossario" aria-labelledby="glossario-t">
+            <h2 id="glossario-t" className="kh-title-2">Glossario base</h2>
+            <dl className="kh-defs">
+              {GLOSSARY.map(({ term, def }) => (
+                <div key={term}>
+                  <dt>{term}</dt>
+                  <dd>{def}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <section id="faq" aria-labelledby="faq-t">
+            <h2 id="faq-t" className="kh-title-2">Domande frequenti</h2>
+            <div className="kh-faq">
+              {FAQ.map(({ q, a }) => (
+                <details key={q}>
+                  <summary>
+                    <span>{q}</span>
+                    <ChevronDown size={20} aria-hidden="true" />
+                  </summary>
+                  <p className="kh-prose">{a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        </article>
+      </div>
+
+      <section className="kh-band" aria-labelledby="guida-cta">
+        <div className="kh-wrap kh-band__grid kh-band__grid--solo">
+          <div className="kh-band__copy">
+            <h2 id="guida-cta" className="kh-title-2">Pronto per la prima gara?</h2>
+            <p style={{ fontSize: 18 }}>
+              Scegli una data dal calendario, oppure parti da una pista vicino a te e prova qualche sessione libera.
+            </p>
+            <div className="kh-actions">
+              <Link to="/calendar" className="kh-btn kh-btn--primary">Vai al calendario</Link>
+              <Link to="/tracks" className="kh-btn kh-btn--secondary">Scegli una pista</Link>
+            </div>
           </div>
         </div>
       </section>
-    </div>
+    </>
   );
 }
 
