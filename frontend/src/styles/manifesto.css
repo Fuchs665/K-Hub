@@ -1,8 +1,7 @@
 /* ============================================================
    K-Hub, direzione Manifesto.
    Token e componenti dal design system K-Hub (artifact Design System).
-   Tutto vive sotto .kh-theme: le pagine non ancora migrate restano
-   sul vecchio index.css e non vedono queste regole.
+   Tutto vive sotto .kh-theme; la base globale (reset, body) e in index.css.
    Nei commenti niente apostrofi (gotcha del lexer PostCSS).
    ============================================================ */
 
@@ -59,8 +58,6 @@
   font-size: 16px;
   line-height: 1.55;
 }
-
-body.kh-body { background: #F1F1EE; }
 
 .kh-theme a { color: inherit; }
 .kh-theme :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -507,7 +504,9 @@ body.kh-body { background: #F1F1EE; }
 .kh-tracks-layout { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 64px; align-items: start; padding-top: var(--space-8); }
 .kh-map-col { position: sticky; top: var(--space-6); }
 .kh-theme .italy-map { width: 100%; height: auto; max-height: 70vh; display: block; }
-.kh-theme .italy-region { fill: #E2E2DC; stroke: var(--surface); stroke-width: 0.8; transition: fill 150ms ease; }
+.kh-theme .italy-region { fill: #E2E2DC; stroke: var(--surface); stroke-width: 0.8; stroke-linejoin: round; transition: fill 150ms ease; }
+.kh-theme .italy-region.empty { cursor: default; }
+.kh-theme .italy-region.has-tracks:focus { outline: none; }
 .kh-theme .italy-region.has-tracks { fill: var(--blu-inchiostro); fill-opacity: 1; cursor: pointer; }
 .kh-theme .italy-region.has-tracks:hover { fill: var(--accent); }
 .kh-theme .italy-region.has-tracks:focus-visible { stroke: var(--giallo-corsa); stroke-width: 2.4; }
@@ -707,4 +706,12 @@ body.kh-body { background: #F1F1EE; }
 }
 @media (max-width: 700px) {
   .kh-auth { padding-block: 28px 56px; }
+}
+
+/* ---------- pagina non trovata ---------- */
+.kh-notfound { padding-block: 72px 96px; display: flex; flex-direction: column; align-items: flex-start; gap: 24px; }
+.kh-notfound__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 700px) {
+  .kh-notfound { padding-block: 40px 64px; }
+  .kh-notfound__actions .kh-btn { flex: 1 1 100%; }
 }
