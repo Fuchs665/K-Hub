@@ -49,6 +49,6 @@ Decisioni prese con l'utente il 2026-07-06. Ogni Step è pensato per essere una 
 
 - **Copertura dati — Passo 4 (piste mancanti)**: `migrations/009_seed_tracks_mancanti.sql` aggiunge 11 piste (Piemonte, Liguria, Puglia, Sardegna, Veneto; ripulita dopo la ricerca fonti, vedi `docs/ricerca-fonti-copertura.md` e `migrations/010_cleanup_seed_tracks.sql`) da elenco ACI Sport e directory; **da applicare a mano sul DB live**. Restano senza piste Molise, Basilicata, Valle d'Aosta e Trentino-AA (solo ghiaccio).
 
-- **Alias nomi pista**: `migrations/011_track_aliases.sql` crea `track_aliases` + `normalize_track_name()` e semina gli alias noti (La Scaglia, Misanino, Siena, Corallo); **da applicare a mano sul DB live**. Per ora solo schema: scraper e frontend non la usano ancora (vedi `docs/ricerca-fonti-copertura.md` §C). I doppioni gia' presenti come righe separate in `tracks` (es. Orobi Kart/Orobikart) vanno uniti a mano.
+- **Alias nomi pista**: `migrations/011_track_aliases.sql` crea `track_aliases` + `normalize_track_name()` e semina gli alias noti (La Scaglia, Misanino, Siena, Corallo); applicata a mano sul DB live (ottobre 2026). Per ora solo schema: scraper e frontend non la usano ancora (vedi `docs/ricerca-fonti-copertura.md` §C). I doppioni gia' presenti come righe separate in `tracks` (es. Orobi Kart/Orobikart) vanno uniti a mano.
 
 - **Possibili sviluppi futuri (non concordati)**: run periodico dello scraper, ruolo organizer con RLS più stretta, modifica/cancellazione risultati.
