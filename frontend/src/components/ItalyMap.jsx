@@ -7,11 +7,11 @@ import { ITALY_VIEWBOX, ITALY_REGIONS } from '../data/italyRegions';
  * - selectedRegion: nome regione selezionata (o null).
  * - onSelect(nomeRegione): chiamata al click di una regione con piste.
  *   Cliccare la regione gia' selezionata la deseleziona (gestito dal genitore).
- * Le regioni senza piste sono grigie e non interattive.
+ * Le regioni senza piste sono grigie ma cliccabili: mostrano lo stato vuoto con l'invito a segnalare un circuito.
  */
 function ItalyMap({ regionCounts = {}, selectedRegion = null, onSelect }) {
-  const handleActivate = (name, count) => {
-    if (count > 0 && onSelect) onSelect(name);
+  const handleActivate = (name) => {
+    if (onSelect) onSelect(name);
   };
 
   return (
@@ -37,14 +37,14 @@ function ItalyMap({ regionCounts = {}, selectedRegion = null, onSelect }) {
             key={id}
             d={path}
             className={classes}
-            onClick={() => handleActivate(name, count)}
-            role={hasTracks ? 'button' : undefined}
-            tabIndex={hasTracks ? 0 : undefined}
-            aria-pressed={hasTracks ? isSelected : undefined}
+            onClick={() => handleActivate(name)}
+            role="button"
+            tabIndex={0}
+            aria-pressed={isSelected}
             onKeyDown={(e) => {
-              if (hasTracks && (e.key === 'Enter' || e.key === ' ')) {
+              if ((e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
-                handleActivate(name, count);
+                handleActivate(name);
               }
             }}
           >
