@@ -7,6 +7,7 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 from toolkit.encoding import configure_stdio, read_text
 from toolkit.normalize import parse_italian_date
+from track_aliases import load_track_aliases, apply_track_aliases
 
 # Stdout/stderr su utf-8 con degradazione controllata: le print con caratteri
 # non-cp1252 (accenti nei titoli evento, ecc.) non crashano piu' su Windows.
@@ -270,8 +271,11 @@ def insert_events_to_supabase(events_list):
     gli eventi gia' presenti vengono aggiornati invece di generare errori
     sul vincolo UNIQUE events_source_url_event_date_key.
     Prima dell'upsert arricchisce ogni evento con region (lookup tracks +
-    fallback euristico) e format, cosi' i filtri del Calendario vedono
+    fallback euristico) e format, canonicalizza il nome pista via track_aliases, cosi' i filtri del Calendario vedono
     anche gli eventi scrapeati; vale per tutte le fonti (run_all incluso)."""
+    # Nome pista canonico + track_id da track_aliases (idempotente: run_all
+    # l'ha gia' applicato e ne stampa il report dei non risolti).
+    apply_track_aliases(events_list, load_track_aliases(supabase))
     data_to_insert = [e.to_dict() for e in events_list]
 
     track_regions = load_track_regions()

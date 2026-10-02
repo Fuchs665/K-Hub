@@ -2,11 +2,12 @@ import sys
 import os
 from urllib.parse import urlparse
 from toolkit.dedupe import find_duplicates
-from scraper_base import insert_events_to_supabase, find_obsolete_events, delete_obsolete_events
+from scraper_base import supabase, insert_events_to_supabase, find_obsolete_events, delete_obsolete_events
 from werace_scraper import scrape_werace_events
 from xrace_scraper import scrape_xrace_events
 from krm_scraper import scrape_krm_events
 from rkc_asi_scraper import scrape_rkc_asi_events
+from track_aliases import load_track_aliases, apply_track_aliases, report_unresolved
 
 def report_cross_source_duplicates(events_list):
     """Segnala eventi con stessa data+pista provenienti da FONTI DIVERSE.
@@ -71,6 +72,10 @@ def run_all_scrapers(dry_run=False, force_prune=False):
     if not all_events:
         print("Nessun evento da inserire.")
         return
+
+    # Prima del report duplicati: con i nomi canonici "Orobi Kart"/"Orobikart"
+    # (o "La Scaglia"/"La Scaglia Circuit 2.0") risultano la stessa pista.
+    report_unresolved(apply_track_aliases(all_events, load_track_aliases(supabase)))
 
     report_cross_source_duplicates(all_events)
 
