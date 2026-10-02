@@ -14,7 +14,7 @@ INSERT INTO public.tracks (name, region, city)
 SELECT v.name, v.region, v.city
 FROM (VALUES
     ('Affi Kart Indoor',               'Veneto',                'Affi'),
-    ('Lignano Circuit',                'Friuli-Venezia Giulia', 'Lignano Sabbiadoro'),
+    ('Lignano Circuit',                'Friuli-Venezia Giulia', 'Precenicco'),
     ('Kartodromo Le Querce',           'Umbria',                'Cascia'),
     ('Pista Karting Arcobaleno',       'Umbria',                'Trevi'),
     ('Kartodromo Palazzo',             'Basilicata',            'Trecchina'),

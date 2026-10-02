@@ -13,6 +13,9 @@
 -- Kartodromo Palazzo (pista riservata ai soci di un'ASD).
 -- Idempotente e sicuro sia che 008/009 siano gia' applicate sia che no:
 -- i DELETE non toccano piste referenziate da eventi (events.track_id).
+-- NB: le stesse modifiche sono ora anche dentro 008/009, quindi su un DB
+-- nuovo questa migration e' un no-op; serve solo dove 008/009 erano gia'
+-- state applicate nella versione precedente.
 -- Da applicare a mano nel SQL editor di Supabase, DOPO 007-009.
 
 DELETE FROM public.tracks t
