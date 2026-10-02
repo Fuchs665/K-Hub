@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getTrackBySlug } from '../lib/tracksRepository';
+import { getTrackBySlug, getTrackAliasNames } from '../lib/tracksRepository';
 import { getEventsAtTrack } from '../lib/eventsRepository';
 import { findLayout, posterGround } from '../lib/tracks';
 import { formatLongDate, formatEventDate, generateCalendarLink } from '../lib/format';
@@ -25,7 +25,7 @@ function Track() {
         const track = await getTrackBySlug(slug);
         if (!alive) return;
         if (!track) { setState({ status: 'notfound', track: null, upcoming: [], past: [] }); return; }
-        const names = findLayout(track.name)?.names ?? [track.name];
+        const names = [track.name, ...(await getTrackAliasNames(track.id))];
         const [upcoming, past] = await Promise.all([
           getEventsAtTrack(names, { when: 'upcoming', trackId: track.id }),
           getEventsAtTrack(names, { when: 'past', limit: 5, trackId: track.id }),

@@ -17,10 +17,25 @@ export function trackPath(name) {
   return `/piste/${slugify(name)}`;
 }
 
+// Specchio JS di public.normalize_track_name() (migration 011): minuscolo, senza
+// accenti, punteggiatura, spazi e sigla provincia finale "(XX)".
+export function normalizeTrackName(name) {
+  return String(name ?? '')
+    .replace(/\s*\([A-Za-z]{2}\)\s*$/, '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+// Stessa pista, a meno di maiuscole/spazi/punteggiatura/sigla provincia.
+export function sameTrack(a, b) {
+  const na = normalizeTrackName(a);
+  return na !== '' && na === normalizeTrackName(b);
+}
+
 export function findLayout(trackName) {
-  const n = norm(trackName);
-  if (!n) return null;
-  return TRACK_LAYOUTS.find((l) => l.names.some((alias) => norm(alias) === n)) ?? null;
+  return TRACK_LAYOUTS.find((l) => sameTrack(l.name, trackName)) ?? null;
 }
 
 // Riquadro del disegno, dalle coppie di coordinate del path (solo comandi M/L).
