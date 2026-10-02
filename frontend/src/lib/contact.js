@@ -1,6 +1,6 @@
 // TODO: sostituire con l'indirizzo reale prima della messa in produzione.
 // È l'unico punto del frontend dove l'email di contatto è definita.
-export const CONTACT_EMAIL = 'TODO@example.com';
+export const CONTACT_EMAIL = 'furchia96@gmail.com';
 
 function mailto(subject, body) {
   const query = `subject=${encodeURIComponent(subject)}${body ? `&body=${encodeURIComponent(body)}` : ''}`;
