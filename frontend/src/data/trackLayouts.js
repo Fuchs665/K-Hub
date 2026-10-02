@@ -1,14 +1,14 @@
 // Tracciati delle piste, disegnati da OpenStreetMap (© OpenStreetMap
 // contributors, licenza ODbL) e normalizzati in un riquadro 200x200.
-// `names` sono i nomi ESATTI con cui la pista compare in tracks.name /
-// events.track_name (la stessa pista può averne più di uno).
+// `name` è il nome canonico, quello di tracks.name. Le varianti di scrittura
+// ("MISANINO KCE (RN)") vivono in track_aliases (migration 011), non qui.
 // `confirmed: false` finché il kartodromo non ha verificato il disegno.
 // `poster`: fondo della locandina, fisso per pista; `posterLines`: titolo della
 // locandina della pista, già spezzato in righe corte.
 export const TRACK_LAYOUTS = [
   {
     id: 'big-kart-rozzano',
-    names: ['Big Kart Rozzano'],
+    name: 'Big Kart Rozzano',
     lengthM: 679,
     osmWay: 178756728,
     confirmed: false,
@@ -18,7 +18,7 @@ export const TRACK_LAYOUTS = [
   },
   {
     id: 'kce-misanino',
-    names: ['KCE Misanino', 'MISANINO KCE (RN)'],
+    name: 'KCE Misanino',
     lengthM: 579,
     osmWay: 623449774,
     confirmed: false,
@@ -28,7 +28,7 @@ export const TRACK_LAYOUTS = [
   },
   {
     id: 'kzr-martinsicuro',
-    names: ['KZR MARTINSICURO (TE)'],
+    name: 'KZR MARTINSICURO (TE)',
     lengthM: 444,
     osmWay: 1426372819,
     confirmed: false,

@@ -5,7 +5,7 @@ import { getTracks } from '../lib/tracksRepository';
 import { groupEventsByBucket, startOfDay } from '../lib/eventBuckets';
 import { parseEventDate, formatLongDate } from '../lib/format';
 import { cleanEventTitle, formatEventType, formatName, posterTitle } from '../lib/eventTitle';
-import { findLayout, posterGround, trackPath } from '../lib/tracks';
+import { findLayout, posterGround, sameTrack, trackPath } from '../lib/tracks';
 import { TRACK_LAYOUTS } from '../data/trackLayouts';
 import Poster from '../components/kh/Poster';
 import TrackLine from '../components/kh/TrackLine';
@@ -72,9 +72,9 @@ function Home() {
   // Una card per ogni pista di cui abbiamo il tracciato.
   const featured = useMemo(
     () => TRACK_LAYOUTS.map((layout) => {
-      const track = tracks.find((t) => layout.names.includes(t.name));
+      const track = tracks.find((t) => sameTrack(t.name, layout.name));
       if (!track) return null;
-      const upcoming = events.filter((e) => layout.names.includes(e.track_name)).length;
+      const upcoming = events.filter((e) => e.track_id === track.id || sameTrack(e.track_name, layout.name)).length;
       return { layout, track, upcoming };
     }).filter(Boolean),
     [tracks, events],
