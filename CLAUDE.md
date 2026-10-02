@@ -43,4 +43,6 @@ Decisioni prese con l'utente il 2026-07-06. Ogni Step è pensato per essere una 
 
 - **Copertura dati — Passo 1 (stato vuoto regioni)**: ✅ implementato su `feat/stato-vuoto-regioni` (ottobre 2026). Il sito dichiara che copre solo 6 regioni: componente `components/kh/EmptyState.jsx` usato in TracksDirectory (le regioni grigie della mappa ora sono cliccabili e mostrano "Nessuna pista censita in X"), Calendar (distingue "regione senza gare censite" da "filtri troppo stretti") e RkcAsi (tab regione vuoto). Link mailto "Segnalaci un circuito" / "Organizzi gare? Pubblicale qui gratis" generati da `frontend/src/lib/contact.js`. **DA FARE: sostituire `CONTACT_EMAIL = 'TODO@example.com'` in `contact.js` con l'indirizzo reale** (unico punto da modificare).
 
+- **Copertura dati — Passo 2 (piste Toscana)**: `migrations/007_seed_tracks_toscana.sql` aggiunge 3 piste (Siena, Sovicille, Cecina); **da applicare a mano sul DB live**. Senza eventi scrapati la Toscana resta senza gare nel calendario.
+
 - **Possibili sviluppi futuri (non concordati)**: run periodico dello scraper, ruolo organizer con RLS più stretta, modifica/cancellazione risultati.
