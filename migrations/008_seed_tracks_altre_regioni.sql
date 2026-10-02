@@ -1,7 +1,9 @@
 -- ============================================================
 -- Migration 008: seed piste in altre regioni senza copertura
 -- ============================================================
--- Veneto, Friuli-Venezia Giulia, Umbria, Basilicata, Calabria, Sicilia.
+-- Veneto, Friuli-Venezia Giulia, Umbria, Calabria, Sicilia.
+-- Rimossa dopo la ricerca (docs/ricerca-fonti-copertura.md): Kartodromo Palazzo
+-- (Trecchina), pista riservata ai soci di un'ASD; vedi 010.
 -- Fonti: directory pubbliche (yumping, turismofvg, livetheworld, milazzo.life):
 -- nome e comune sono confermati, ma operativita' e orari vanno verificati
 -- a mano prima di pubblicizzare le piste. Restano scoperte Piemonte, Valle
@@ -17,7 +19,6 @@ FROM (VALUES
     ('Lignano Circuit',                'Friuli-Venezia Giulia', 'Precenicco'),
     ('Kartodromo Le Querce',           'Umbria',                'Cascia'),
     ('Pista Karting Arcobaleno',       'Umbria',                'Trevi'),
-    ('Kartodromo Palazzo',             'Basilicata',            'Trecchina'),
     ('Kartodromo del Sole',            'Calabria',              'Palmi'),
     ('Circuito Kartodromo di Avola',   'Sicilia',               'Avola'),
     ('Kartodromo Lascari',             'Sicilia',               'Lascari'),

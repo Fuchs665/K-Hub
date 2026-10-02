@@ -5,13 +5,13 @@
 --  * rimuove piste non trovate o non-kart: Sardinia Circuit (circuito
 --    supermoto), Kartodromo Paradiso, Pista Eurokart Torre Lapillo,
 --    Pista Sestugo (nessuna evidenza), Pista Fanelli (ultima attivita'
---    nota 2019);
+--    nota 2019), Kartodromo 2000, Kartodromo Palazzo;
 --  * corregge citta'/nome incoerenti con le fonti: Lignano Circuit ha
 --    sede a Precenicco (UD), PG Corse a Ronco Scrivia (GE), "Vicenza
 --    Kart" e' "Vicenza Kart Indoor".
--- Restano invariate (da decidere): Kartodromo 2000 (omonimo di Lucera) e
--- Kartodromo Palazzo (pista riservata ai soci di un'ASD).
--- Idempotente e sicuro sia che 008/009 siano gia' applicate sia che no:
+-- Rimuove anche Kartodromo 2000 (omonimo di Lucera, nessuna evidenza
+-- recente) e Kartodromo Palazzo (pista riservata ai soci di un'ASD).
+-- Idempotente e sicuro sia che 007-009 siano gia' applicate sia che no:
 -- i DELETE non toccano piste referenziate da eventi (events.track_id).
 -- NB: le stesse modifiche sono ora anche dentro 008/009, quindi su un DB
 -- nuovo questa migration e' un no-op; serve solo dove 008/009 erano gia'
@@ -24,7 +24,9 @@ WHERE lower(t.name) IN (
     'kartodromo paradiso',
     'pista eurokart torre lapillo',
     'pista sestugo',
-    'pista fanelli'
+    'pista fanelli',
+    'kartodromo 2000',
+    'kartodromo palazzo'
 )
 AND NOT EXISTS (SELECT 1 FROM public.events e WHERE e.track_id = t.id);
 
