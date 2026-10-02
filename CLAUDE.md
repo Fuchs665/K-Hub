@@ -47,4 +47,6 @@ Decisioni prese con l'utente il 2026-07-06. Ogni Step è pensato per essere una 
 
 - **Copertura dati — Passo 3 (altre regioni)**: `migrations/008_seed_tracks_altre_regioni.sql` aggiunge 9 piste (Veneto, FVG, Umbria, Basilicata, Calabria, Sicilia); **da applicare a mano sul DB live**, operativita' da verificare. Restano senza piste: Piemonte, Valle d'Aosta, Liguria, Trentino-AA, Molise, Puglia, Sardegna.
 
+- **Copertura dati — Passo 4 (piste mancanti)**: `migrations/009_seed_tracks_mancanti.sql` aggiunge 16 piste (Piemonte, Liguria, Molise, Puglia, Sardegna, Veneto) da elenco ACI Sport e directory; **da applicare a mano sul DB live**. Restano senza piste solo Valle d'Aosta e Trentino-AA (solo ghiaccio).
+
 - **Possibili sviluppi futuri (non concordati)**: run periodico dello scraper, ruolo organizer con RLS più stretta, modifica/cancellazione risultati.
