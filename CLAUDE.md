@@ -51,4 +51,6 @@ Decisioni prese con l'utente il 2026-07-06. Ogni Step è pensato per essere una 
 
 - **Alias nomi pista**: `migrations/011_track_aliases.sql` crea `track_aliases` + `normalize_track_name()` e semina gli alias noti (La Scaglia, Misanino, Siena, Corallo); applicata a mano sul DB live (ottobre 2026). Lo scraper la usa (`scraper/track_aliases.py`, chiamato da `run_all.py` e `insert_events_to_supabase`): canonicalizza `events.track_name`, valorizza `events.track_id`, e a fine run elenca i nomi pista senza alias; `trackLayouts.js` ha un solo `name` canonico per pista (le varianti sono in `track_aliases`; `findLayout` confronta con `normalizeTrackName`, specchio JS della funzione SQL); il frontend usa `events.track_id` in `getEventsAtTrack` (pagina pista ed EventDetails, in unione al match per nome per le righe vecchie; vedi `docs/ricerca-fonti-copertura.md` §C). Test: `cd scraper && python -m unittest test_track_aliases`. I doppioni gia' presenti come righe separate in `tracks` (es. Orobi Kart/Orobikart) vanno uniti a mano.
 
+- **Primo run reale con alias**: checklist e SQL di verifica/rollback in `docs/test-run-scraper.md` (non ancora eseguito: manca `SUPABASE_SERVICE_ROLE_KEY`).
+
 - **Possibili sviluppi futuri (non concordati)**: run periodico dello scraper, ruolo organizer con RLS più stretta, modifica/cancellazione risultati.
