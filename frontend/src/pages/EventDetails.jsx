@@ -26,13 +26,15 @@ const sameName = (a, b) => String(a ?? '').trim().toLowerCase() === String(b ?? 
 async function loadEvent(id) {
   const event = await getEventById(id);
   const [standings, laps, tracks] = await Promise.all([getEventStandings(id), getEventLapTimes(id), getTracks()]);
-  // Pista in anagrafica: stesso nome, oppure il nome della gara inizia con quello della
-  // pista ("La Scaglia Circuit 2.0" -> "La Scaglia").
+  // Pista in anagrafica: track_id dell'evento (risolto dallo scraper), altrimenti
+  // stesso nome, oppure il nome della gara inizia con quello della pista
+  // ("La Scaglia Circuit 2.0" -> "La Scaglia").
   const eventTrack = String(event.track_name ?? '').toLowerCase();
-  const track = tracks.find((t) => sameName(t.name, event.track_name) || findLayout(t.name)?.names.some((n) => sameName(n, event.track_name)))
+  const track = (event.track_id && tracks.find((t) => t.id === event.track_id))
+    ?? tracks.find((t) => sameName(t.name, event.track_name) || findLayout(t.name)?.names.some((n) => sameName(n, event.track_name)))
     ?? tracks.find((t) => t.name && eventTrack.startsWith(t.name.toLowerCase()));
   const names = findLayout(track?.name ?? event.track_name)?.names ?? [track?.name ?? event.track_name];
-  const upcomingHere = event.track_name ? await getEventsAtTrack(names, { when: 'upcoming', limit: 6 }) : [];
+  const upcomingHere = event.track_name ? await getEventsAtTrack(names, { when: 'upcoming', limit: 6, trackId: track?.id }) : [];
   return { event, standings, laps, track, others: upcomingHere.filter((o) => o.id !== event.id).slice(0, 3) };
 }
 

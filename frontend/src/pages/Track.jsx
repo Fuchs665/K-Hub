@@ -27,8 +27,8 @@ function Track() {
         if (!track) { setState({ status: 'notfound', track: null, upcoming: [], past: [] }); return; }
         const names = findLayout(track.name)?.names ?? [track.name];
         const [upcoming, past] = await Promise.all([
-          getEventsAtTrack(names, { when: 'upcoming' }),
-          getEventsAtTrack(names, { when: 'past', limit: 5 }),
+          getEventsAtTrack(names, { when: 'upcoming', trackId: track.id }),
+          getEventsAtTrack(names, { when: 'past', limit: 5, trackId: track.id }),
         ]);
         if (alive) setState({ status: 'ready', track, upcoming, past });
       } catch (error) {
