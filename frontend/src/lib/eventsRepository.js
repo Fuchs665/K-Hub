@@ -168,33 +168,44 @@ export async function getEventLapTimes(eventId) {
   return data || [];
 }
 
-// Gare su una pista. Il nome della gara deve iniziare con uno dei nomi della
-// pista, senza distinzione di maiuscole: le fonti a volte aggiungono un
-// suffisso ("La Scaglia" -> "La Scaglia Circuit 2.0"). Una pista può avere più
-// nomi (vedi data/trackLayouts.js): una query per nome, poi unione.
+// Gare su una pista. Due criteri, in unione (senza duplicati):
+// - track_id: la pista canonica risolta dallo scraper via track_aliases
+//   (migration 011); copre anche le varianti di nome ("Orobi Kart"/"Orobikart");
+// - nome: il nome della gara deve iniziare con uno dei nomi della pista, senza
+//   distinzione di maiuscole (le fonti a volte aggiungono un suffisso:
+//   "La Scaglia" -> "La Scaglia Circuit 2.0"). Serve per le righe scrapeate
+//   prima che track_id esistesse e per gli eventi inseriti a mano. Una pista
+//   può avere più nomi (vedi data/trackLayouts.js): una query per nome.
 // when: 'upcoming' (da oggi, crescenti) o 'past' (decrescenti).
-export async function getEventsAtTrack(trackNames, { when = 'upcoming', limit = 20 } = {}) {
+export async function getEventsAtTrack(trackNames, { when = 'upcoming', limit = 20, trackId = null } = {}) {
   const names = [...new Set(trackNames.filter(Boolean))];
-  if (names.length === 0) return [];
-  const cacheKey = `events:track:${when}:${limit}:${names.join('|')}`;
+  if (names.length === 0 && !trackId) return [];
+  const cacheKey = `events:track:${when}:${limit}:${trackId ?? ''}:${names.join('|')}`;
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
   const today = new Date().toISOString().slice(0, 10);
   const past = when === 'past';
-  const results = await Promise.all(names.map(async (name) => {
+  const ranged = (query) => (past
+    ? query.lt('event_date', today).order('event_date', { ascending: false })
+    : query.gte('event_date', today).order('event_date', { ascending: true })
+  ).limit(limit);
+
+  const byName = names.map(async (name) => {
     const pattern = `${name.replace(/[\\%_]/g, '\\$&')}%`;
-    let query = supabase.from('events').select('*').ilike('track_name', pattern);
-    query = past
-      ? query.lt('event_date', today).order('event_date', { ascending: false })
-      : query.gte('event_date', today).order('event_date', { ascending: true });
-    const { data, error } = await query.limit(limit);
+    const { data, error } = await ranged(supabase.from('events').select('*').ilike('track_name', pattern));
     if (error) throw error;
     return data || [];
-  }));
+  });
+  // L'errore sulla query per track_id non blocca la pagina (es. colonna non
+  // ancora presente sul DB): restano i risultati per nome.
+  const byId = trackId
+    ? [ranged(supabase.from('events').select('*').eq('track_id', trackId)).then(({ data }) => data || [])]
+    : [];
+  const results = await Promise.all([...byName, ...byId]);
 
-  const byId = new Map(results.flat().map((ev) => [ev.id, ev]));
-  const events = [...byId.values()]
+  const unique = new Map(results.flat().map((ev) => [ev.id, ev]));
+  const events = [...unique.values()]
     .sort((a, b) => (past ? b.event_date.localeCompare(a.event_date) : a.event_date.localeCompare(b.event_date)))
     .slice(0, limit);
   setCached(cacheKey, events);
