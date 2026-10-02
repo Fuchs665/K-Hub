@@ -45,4 +45,6 @@ Decisioni prese con l'utente il 2026-07-06. Ogni Step è pensato per essere una 
 
 - **Copertura dati — Passo 2 (piste Toscana)**: `migrations/007_seed_tracks_toscana.sql` aggiunge 3 piste (Siena, Sovicille, Cecina); **da applicare a mano sul DB live**. Senza eventi scrapati la Toscana resta senza gare nel calendario.
 
+- **Copertura dati — Passo 3 (altre regioni)**: `migrations/008_seed_tracks_altre_regioni.sql` aggiunge 9 piste (Veneto, FVG, Umbria, Basilicata, Calabria, Sicilia); **da applicare a mano sul DB live**, operativita' da verificare. Restano senza piste: Piemonte, Valle d'Aosta, Liguria, Trentino-AA, Molise, Puglia, Sardegna.
+
 - **Possibili sviluppi futuri (non concordati)**: run periodico dello scraper, ruolo organizer con RLS più stretta, modifica/cancellazione risultati.
