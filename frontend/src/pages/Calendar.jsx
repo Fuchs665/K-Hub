@@ -6,6 +6,7 @@ import { parseEventDate, formatLongDate } from '../lib/format';
 import { ITALIAN_MONTHS, startOfDay, toIsoDate, groupEventsByBucket, groupByMonth } from '../lib/eventBuckets';
 import { cleanEventTitle } from '../lib/eventTitle';
 import EventRow, { EventGroups } from '../components/kh/EventRow';
+import EmptyState from '../components/kh/EmptyState';
 import useDocumentTitle from '../components/kh/useDocumentTitle';
 
 const PAGE_SIZE = 20;
@@ -77,12 +78,44 @@ function SkeletonRows() {
   );
 }
 
+// Tre casi distinti: regione mai coperta, filtri troppo stretti, periodo senza gare.
+function CalendarEmpty({ uncoveredRegion, active, past, month, update, resetAll }) {
+  if (uncoveredRegion) {
+    return (
+      <EmptyState title={`Nessuna gara censita in ${uncoveredRegion}`} region={uncoveredRegion} suggestTrack organizers>
+        Non è un errore: per ora non raccogliamo gare da questa regione. Intanto puoi{' '}
+        <button type="button" className="kh-link-accent kh-linkbtn" onClick={() => update({ regione: 'ALL' })}>guardare tutta Italia</button>.
+      </EmptyState>
+    );
+  }
+  if (active.length > 0) {
+    return (
+      <EmptyState title={`Nessuna gara con questi filtri${month ? ' in questo mese' : ''}`}>
+        Prova a rimuovere qualche filtro attivo, o azzerali tutti per vedere ogni gara.
+        <span className="kh-empty-state__actions">
+          <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={resetAll}>Azzera i filtri</button>
+        </span>
+      </EmptyState>
+    );
+  }
+  if (month) return <EmptyState title="Nessuna gara in questo mese" />;
+  return (
+    <EmptyState title={past ? 'Non ci sono ancora gare passate' : 'Nessuna gara in programma per ora'}>
+      {!past && (
+        <span className="kh-empty-state__actions">
+          <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => update({ quando: 'passate' })}>Guarda le gare passate</button>
+        </span>
+      )}
+    </EmptyState>
+  );
+}
+
 function Calendar() {
   useDocumentTitle('Calendario gare, K-Hub');
   const [params, setParams] = useSearchParams();
   const f = readFilters(params);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [facets, setFacets] = useState({ regions: [], engineTypes: [] });
+  const [facets, setFacets] = useState({ regions: [], engineTypes: [], loaded: false });
 
   function update(changes) {
     const next = new URLSearchParams(params);
@@ -94,7 +127,7 @@ function Calendar() {
   }
 
   useEffect(() => {
-    getEventFacets().then(setFacets).catch((error) => console.error('Errore nel caricare i filtri:', error));
+    getEventFacets().then((data) => setFacets({ ...data, loaded: true })).catch((error) => console.error('Errore nel caricare i filtri:', error));
   }, []);
 
   const query = { region: f.regione, eventType: f.formato, engineType: f.kart, format: f.tipo };
@@ -171,6 +204,9 @@ function Calendar() {
     f.tipo !== 'ALL' && { key: 'tipo', label: kindLabel },
   ].filter(Boolean);
   const extraCount = [f.regione, f.kart, f.tipo].filter((v) => v !== 'ALL').length;
+  // Regione scelta ma senza nessuna gara censita (né in programma né passata):
+  // è un buco di copertura, non un filtro troppo stretto.
+  const uncoveredRegion = facets.loaded && f.regione !== 'ALL' && !facets.regions.includes(f.regione) ? f.regione : null;
   const resetAll = () => update({ formato: 'ALL', regione: 'ALL', kart: 'ALL', tipo: 'ALL' });
 
   const withCurrent = (values, current) => (current !== 'ALL' && !values.includes(current) ? [...values, current] : values);
@@ -283,17 +319,7 @@ function Calendar() {
             <div className="kh-empty"><p>Non riusciamo a caricare le gare in questo momento. Ricarica la pagina tra qualche minuto.</p></div>
           )}
           {(list.status === 'ready' || list.status === 'more') && list.events.length === 0 && (
-            <div className="kh-empty">
-              <p>
-                {active.length > 0
-                  ? 'Nessuna gara con questi filtri.'
-                  : past ? 'Non ci sono ancora gare passate.' : 'Nessuna gara in programma per ora.'}
-              </p>
-              {active.length > 0 && <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={resetAll}>Azzera i filtri</button>}
-              {active.length === 0 && !past && (
-                <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => update({ quando: 'passate' })}>Guarda le gare passate</button>
-              )}
-            </div>
+            <CalendarEmpty uncoveredRegion={uncoveredRegion} active={active} past={past} update={update} resetAll={resetAll} />
           )}
           {list.status !== 'loading' && list.status !== 'error' && <EventGroups groups={listGroups} register={!past} />}
           {list.events.length > 0 && list.events.length < list.total && (
@@ -360,9 +386,7 @@ function Calendar() {
               </div>
 
               {monthData.status === 'ready' && eventsByDay.size === 0 && (
-                <div className="kh-empty">
-                  <p>{active.length > 0 ? 'Nessuna gara con questi filtri in questo mese.' : 'Nessuna gara in questo mese.'}</p>
-                </div>
+                <CalendarEmpty uncoveredRegion={uncoveredRegion} active={active} month update={update} resetAll={resetAll} />
               )}
 
               {selectedDay && eventsByDay.has(selectedDay) && (
