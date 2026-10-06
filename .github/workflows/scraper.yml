@@ -1,0 +1,100 @@
+name: Scraper
+
+# Avvio solo manuale (Actions -> Scraper -> Run workflow). Parte in dry-run:
+# nessuna scrittura sul DB. Il run reale (mode=real) usa la service role key
+# ed e' legato all'Environment "scraper-prod": crealo in Settings ->
+# Environments con "Required reviewers" per avere un'approvazione manuale
+# prima di ogni scrittura (vedi docs/test-run-scraper.md).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run = solo lettura; real = scrive su Supabase"
+        type: choice
+        options: [dry-run, real]
+        default: dry-run
+      force_prune:
+        description: "Solo real: rimuove piu' di 25 righe obsolete (--force-prune)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scraper
+  cancel-in-progress: false
+
+jobs:
+  dry-run:
+    if: inputs.mode == 'dry-run'
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scraper/requirements.txt
+
+      # requirements.txt contiene un path Windows editable per il toolkit e
+      # playwright (serve solo a SWS, che non e' in run_all.py): in CI si
+      # installa il resto e il toolkit da GitHub con un token read-only.
+      - name: Installa dipendenze
+        env:
+          TOOLKIT_TOKEN: ${{ secrets.TOOLKIT_TOKEN }}
+        run: |
+          grep -vE '^(-e |#|playwright|$)' scraper/requirements.txt > /tmp/requirements-ci.txt
+          pip install -r /tmp/requirements-ci.txt
+          pip install "git+https://x-access-token:${TOOLKIT_TOKEN}@github.com/Fuchs665/it-scraper-toolkit.git"
+
+      - name: Test unitari
+        working-directory: scraper
+        run: python -m unittest test_track_aliases
+
+      - name: Dry-run (sola lettura, anon key)
+        working-directory: scraper
+        env:
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python run_all.py --dry-run
+
+  real-run:
+    if: inputs.mode == 'real'
+    environment: scraper-prod
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scraper/requirements.txt
+
+      # requirements.txt contiene un path Windows editable per il toolkit e
+      # playwright (serve solo a SWS, che non e' in run_all.py): in CI si
+      # installa il resto e il toolkit da GitHub con un token read-only.
+      - name: Installa dipendenze
+        env:
+          TOOLKIT_TOKEN: ${{ secrets.TOOLKIT_TOKEN }}
+        run: |
+          grep -vE '^(-e |#|playwright|$)' scraper/requirements.txt > /tmp/requirements-ci.txt
+          pip install -r /tmp/requirements-ci.txt
+          pip install "git+https://x-access-token:${TOOLKIT_TOKEN}@github.com/Fuchs665/it-scraper-toolkit.git"
+
+      - name: Test unitari
+        working-directory: scraper
+        run: python -m unittest test_track_aliases
+
+      - name: Run reale (scrive su Supabase)
+        working-directory: scraper
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python run_all.py ${{ inputs.force_prune && '--force-prune' || '' }}
