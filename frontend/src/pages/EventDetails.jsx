@@ -3,11 +3,11 @@ import { Link, useParams } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { getEventById, getEventLapTimes, getEventsAtTrack } from '../lib/eventsRepository';
 import { getEventStandings } from '../lib/pilotsRepository';
-import { getTracks } from '../lib/tracksRepository';
+import { getTracks, getTrackAliasNames } from '../lib/tracksRepository';
 import { formatLongDate, generateCalendarLink, parseEventDate } from '../lib/format';
 import { startOfDay } from '../lib/eventBuckets';
 import { cleanEventTitle, formatEventType, formatName, posterTitle } from '../lib/eventTitle';
-import { findLayout, posterGround, trackPath } from '../lib/tracks';
+import { findLayout, posterGround, sameTrack, trackPath } from '../lib/tracks';
 import Poster from '../components/kh/Poster';
 import LapTime from '../components/kh/LapTime';
 import EventRow from '../components/kh/EventRow';
@@ -21,18 +21,18 @@ function hostname(url) {
   try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
 }
 
-const sameName = (a, b) => String(a ?? '').trim().toLowerCase() === String(b ?? '').trim().toLowerCase();
-
 async function loadEvent(id) {
   const event = await getEventById(id);
   const [standings, laps, tracks] = await Promise.all([getEventStandings(id), getEventLapTimes(id), getTracks()]);
-  // Pista in anagrafica: stesso nome, oppure il nome della gara inizia con quello della
-  // pista ("La Scaglia Circuit 2.0" -> "La Scaglia").
+  // Pista in anagrafica: track_id dell'evento (risolto dallo scraper), altrimenti
+  // stesso nome, oppure il nome della gara inizia con quello della pista
+  // ("La Scaglia Circuit 2.0" -> "La Scaglia").
   const eventTrack = String(event.track_name ?? '').toLowerCase();
-  const track = tracks.find((t) => sameName(t.name, event.track_name) || findLayout(t.name)?.names.some((n) => sameName(n, event.track_name)))
+  const track = (event.track_id && tracks.find((t) => t.id === event.track_id))
+    ?? tracks.find((t) => sameTrack(t.name, event.track_name))
     ?? tracks.find((t) => t.name && eventTrack.startsWith(t.name.toLowerCase()));
-  const names = findLayout(track?.name ?? event.track_name)?.names ?? [track?.name ?? event.track_name];
-  const upcomingHere = event.track_name ? await getEventsAtTrack(names, { when: 'upcoming', limit: 6 }) : [];
+  const names = [track?.name ?? event.track_name, ...(track ? await getTrackAliasNames(track.id) : [])];
+  const upcomingHere = event.track_name ? await getEventsAtTrack(names, { when: 'upcoming', limit: 6, trackId: track?.id }) : [];
   return { event, standings, laps, track, others: upcomingHere.filter((o) => o.id !== event.id).slice(0, 3) };
 }
 

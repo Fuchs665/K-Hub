@@ -5,6 +5,7 @@ import { getTracks } from '../lib/tracksRepository';
 import { findLayout, trackPath } from '../lib/tracks';
 import { formatName } from '../lib/eventTitle';
 import ItalyMap from '../components/ItalyMap';
+import EmptyState from '../components/kh/EmptyState';
 import TrackLine from '../components/kh/TrackLine';
 import useDocumentTitle from '../components/kh/useDocumentTitle';
 
@@ -70,7 +71,7 @@ function TracksDirectory() {
                   <ItalyMap regionCounts={regionCounts} selectedRegion={selectedRegion} onSelect={toggleRegion} />
                   <p className="kh-small kh-map-legend">
                     <span className="kh-swatch kh-swatch--on" aria-hidden="true" /> Regioni con piste
-                    <span className="kh-swatch" aria-hidden="true" /> Nessuna pista
+                    <span className="kh-swatch" aria-hidden="true" /> Nessuna pista (clicca per segnalarne una)
                   </p>
                 </>
               )}
@@ -99,12 +100,16 @@ function TracksDirectory() {
                   ))}
                 </div>
               ) : visibleTracks.length === 0 ? (
-                <div className="kh-empty">
-                  <h3 className="kh-title-3">
-                    {selectedRegion ? `Nessuna pista in ${selectedRegion}` : 'Nessuna pista al momento'}
-                  </h3>
-                  <p className="kh-muted">Stiamo aggiungendo nuovi kartodromi: torna presto.</p>
-                </div>
+                <EmptyState
+                  title={selectedRegion ? `Nessuna pista censita in ${selectedRegion}` : 'Nessuna pista al momento'}
+                  region={selectedRegion}
+                  suggestTrack
+                  organizers
+                >
+                  {selectedRegion
+                    ? 'Qui non abbiamo ancora nessun kartodromo: non vuol dire che non esista, solo che non l\'abbiamo ancora raccolto.'
+                    : 'Stiamo aggiungendo nuovi kartodromi: torna presto.'}
+                </EmptyState>
               ) : (
                 <ul className="kh-track-list">
                   {visibleTracks.map((track) => {

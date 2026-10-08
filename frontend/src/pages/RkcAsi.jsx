@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { getRkcAsiEvents } from '../lib/eventsRepository';
 import { groupEventsByBucket, groupByMonth } from '../lib/eventBuckets';
 import { EventGroups } from '../components/kh/EventRow';
+import EmptyState from '../components/kh/EmptyState';
 import useDocumentTitle from '../components/kh/useDocumentTitle';
 
 const OFFICIAL_SITE = 'https://www.rkcasikarting.it/';
@@ -125,26 +126,31 @@ function RkcAsi() {
             </button>
           </div>
         ) : visible.length === 0 ? (
-          <div className="kh-empty">
-            <h2 className="kh-title-3">
-              {region !== 'ALL'
-                ? `Nessuna tappa ${past ? 'disputata' : 'in programma'} in ${region}`
-                : `Nessuna tappa ${past ? 'disputata' : 'in programma'} al momento`}
-            </h2>
-            <p className="kh-muted">
-              {past ? 'Le tappe compaiono qui dopo la data di gara.' : 'Le nuove date appaiono qui appena il campionato le pubblica.'}
-            </p>
-            {region !== 'ALL' && (
-              <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => update({ regione: 'ALL' })}>
-                Mostra tutte le regioni
-              </button>
-            )}
-            {!past && (
-              <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => update({ quando: 'disputate' })}>
-                Guarda le tappe disputate
-              </button>
-            )}
-          </div>
+          <EmptyState
+            as="h2"
+            title={region !== 'ALL'
+              ? `Nessuna tappa ${past ? 'disputata' : 'in programma'} in ${region}`
+              : `Nessuna tappa ${past ? 'disputata' : 'in programma'} al momento`}
+            region={region !== 'ALL' ? region : undefined}
+            suggestTrack={region !== 'ALL'}
+            organizers={region !== 'ALL'}
+          >
+            {region !== 'ALL'
+              ? 'Il campionato non ha (ancora) tappe qui: le date appaiono appena RKC ASI le pubblica.'
+              : past ? 'Le tappe compaiono qui dopo la data di gara.' : 'Le nuove date appaiono qui appena il campionato le pubblica.'}
+            <span className="kh-empty-state__actions">
+              {region !== 'ALL' && (
+                <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => update({ regione: 'ALL' })}>
+                  Mostra tutte le regioni
+                </button>
+              )}
+              {!past && (
+                <button type="button" className="kh-btn kh-btn--secondary kh-btn--sm" onClick={() => update({ quando: 'disputate' })}>
+                  Guarda le tappe disputate
+                </button>
+              )}
+            </span>
+          </EmptyState>
         ) : (
           <EventGroups groups={groups} register={!past} />
         )}
