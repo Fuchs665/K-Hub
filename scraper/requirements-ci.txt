@@ -1,0 +1,7 @@
+# Dipendenze dello scraper in CI (GitHub Actions): solo le 4 fonti HTTP.
+# Niente playwright/playwright-stealth (SWS non gira in CI).
+# it-scraper-toolkit (repo privato) lo installa il workflow dal checkout, non da qui.
+beautifulsoup4==4.12.3
+requests==2.32.3
+supabase==2.10.0
+python-dotenv==1.2.2
