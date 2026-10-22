@@ -1,11 +1,20 @@
 name: Scraper
 
-# Avvio solo manuale (Actions -> Scraper -> Run workflow). Parte in dry-run:
-# nessuna scrittura sul DB. Il run reale (mode=real) usa la service role key
-# ed e' legato all'Environment "scraper-prod": crealo in Settings ->
-# Environments con "Required reviewers" per avere un'approvazione manuale
-# prima di ogni scrittura (vedi docs/test-run-scraper.md).
+# Aggiorna la tabella events da WeRace, XRace, KRM e RKC ASI (SWS escluso:
+# reCAPTCHA). Tre modi di avvio:
+#  * manuale, mode=dry-run (default): sola lettura, anon key;
+#  * manuale, mode=real: scrive su Supabase, Environment "scraper-prod"
+#    (con "Required reviewers" ogni run reale chiede approvazione);
+#  * cron due volte al giorno: run reale, ma SOLO se la variabile del repo
+#    SCRAPER_CRON_ENABLED vale "true" (Settings -> Secrets and variables ->
+#    Actions -> Variables). Si attiva dopo il primo dry-run e il primo run
+#    reale riusciti (docs/test-run-scraper.md). Usa l'Environment
+#    "scraper-cron": crealo SENZA reviewer, altrimenti il cron aspetta
+#    un'approvazione a ogni giro.
 on:
+  schedule:
+    # 05:17 e 17:17 UTC = 7:17 e 19:17 in Italia (ora legale).
+    - cron: "17 5,17 * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -21,80 +30,51 @@ on:
 permissions:
   contents: read
 
+# Mai due run insieme sullo stesso database.
 concurrency:
   group: scraper
   cancel-in-progress: false
 
 jobs:
   dry-run:
-    if: inputs.mode == 'dry-run'
-    timeout-minutes: 20
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'dry-run'
     runs-on: ubuntu-latest
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-scraper
         with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: scraper/requirements.txt
-
-      # requirements.txt contiene un path Windows editable per il toolkit e
-      # playwright (serve solo a SWS, che non e' in run_all.py): in CI si
-      # installa il resto e il toolkit da GitHub con un token read-only.
-      - name: Installa dipendenze
-        env:
-          TOOLKIT_TOKEN: ${{ secrets.TOOLKIT_TOKEN }}
-        run: |
-          grep -vE '^(-e |#|playwright|$)' scraper/requirements.txt > /tmp/requirements-ci.txt
-          pip install -r /tmp/requirements-ci.txt
-          pip install "git+https://x-access-token:${TOOLKIT_TOKEN}@github.com/Fuchs665/it-scraper-toolkit.git"
-
-      - name: Test unitari
-        working-directory: scraper
-        run: python -m unittest test_track_aliases
-
+          toolkit-token: ${{ secrets.TOOLKIT_TOKEN }}
       - name: Dry-run (sola lettura, anon key)
         working-directory: scraper
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: python run_all.py --dry-run
 
   real-run:
-    if: inputs.mode == 'real'
-    environment: scraper-prod
-    timeout-minutes: 20
+    # Manuale con mode=real, oppure cron se abilitato dalla variabile.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'real') ||
+      (github.event_name == 'schedule' && vars.SCRAPER_CRON_ENABLED == 'true')
     runs-on: ubuntu-latest
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+    timeout-minutes: 10
+    environment: ${{ github.event_name == 'schedule' && 'scraper-cron' || 'scraper-prod' }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-scraper
         with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: scraper/requirements.txt
-
-      # requirements.txt contiene un path Windows editable per il toolkit e
-      # playwright (serve solo a SWS, che non e' in run_all.py): in CI si
-      # installa il resto e il toolkit da GitHub con un token read-only.
-      - name: Installa dipendenze
-        env:
-          TOOLKIT_TOKEN: ${{ secrets.TOOLKIT_TOKEN }}
-        run: |
-          grep -vE '^(-e |#|playwright|$)' scraper/requirements.txt > /tmp/requirements-ci.txt
-          pip install -r /tmp/requirements-ci.txt
-          pip install "git+https://x-access-token:${TOOLKIT_TOKEN}@github.com/Fuchs665/it-scraper-toolkit.git"
-
-      - name: Test unitari
-        working-directory: scraper
-        run: python -m unittest test_track_aliases
-
+          toolkit-token: ${{ secrets.TOOLKIT_TOKEN }}
       - name: Run reale (scrive su Supabase)
         working-directory: scraper
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python run_all.py ${{ inputs.force_prune && '--force-prune' || '' }}
+          FORCE_PRUNE: ${{ inputs.force_prune }}
+        run: |
+          # Esce con codice 1 se non scrive nulla: GitHub segnala il run e manda l'email.
+          if [ "$FORCE_PRUNE" = "true" ]; then
+            python run_all.py --force-prune
+          else
+            python run_all.py
+          fi
