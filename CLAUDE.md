@@ -57,4 +57,6 @@ Decisioni prese con l'utente il 2026-07-06. Ogni Step è pensato per essere una 
 
 - **Scraper in CI**: `.github/workflows/scraper.yml`, avvio manuale (Actions → Scraper): `dry-run` (anon key, sola lettura) o `real` (service role key, Environment `scraper-prod`). Secret richiesti: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `TOOLKIT_TOKEN` (read-only sul repo privato del toolkit). Non ancora eseguito.
 
+- **Piano di lancio (ottobre 2026)**: task T01→T15 in `docs/piano-lancio.md`, uno per chat (modello ed effort indicati lì). Soft launch 17/11/2026, lancio pubblico 01/02/2027. A fine task aggiornare la colonna Stato.
+
 - **Possibili sviluppi futuri (non concordati)**: run periodico dello scraper, ruolo organizer con RLS più stretta, modifica/cancellazione risultati.
